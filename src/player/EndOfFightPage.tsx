@@ -35,7 +35,9 @@ export function EndOfFightPage({
     >
       <header className="story-caption-box end-of-fight-header">
         <span className="story-node__badge">{outcomeHeading}</span>
-        <h2>{encounter.enemy.name}</h2>
+        <h2 className="page-heading-focus" tabIndex={-1} data-page-heading>
+          {encounter.enemy.name}
+        </h2>
       </header>
 
       <ol className="end-of-fight-strip" data-testid="end-of-fight-strip">

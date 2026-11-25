@@ -409,3 +409,31 @@
 .title-screen__continue-btn {
   background: var(--color-accent-bg, #fef3c7);
 }
+
+@keyframes pageTurnIn {
+  from {
+    opacity: 0.72;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.page-turn-frame {
+  animation: pageTurnIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page-heading-focus:focus {
+  outline: 2px solid var(--color-accent, #b45309);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-turn-frame,
+  .story-choice-btn {
+    animation: none !important;
+    transition: none !important;
+  }
+}

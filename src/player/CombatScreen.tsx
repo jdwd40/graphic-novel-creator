@@ -93,6 +93,9 @@ export function CombatScreen({
       aria-label={`Combat with ${encounter.enemy.name}`}
       data-testid="combat-screen"
     >
+      <h2 className="sr-only page-heading-focus" tabIndex={-1} data-page-heading>
+        Combat with {encounter.enemy.name}
+      </h2>
       <div
         className={`combat-tap-zone ${hasOpenMoment ? 'combat-tap-zone--locked' : ''}`}
         data-testid="combat-tap-zone"

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { selectEncounterArt } from '../combat/art';
 import { nextTell, selectResultCaption } from '../combat/captions';
 import { evaluateCondition } from '../combat/conditions';
@@ -458,6 +458,40 @@ export function StoryPlayer({
     ? liveFight.playerMaxBuffer
     : getArmourBuffer(playthrough.combat);
 
+  const renderedView =
+    unwiredNotice || !currentNode
+      ? 'notice'
+      : currentNode.kind === 'passage'
+        ? 'passage'
+        : playthrough.activeFight?.encounterId === currentNode.id
+          ? playthrough.activeFight.fight.status === 'finished'
+            ? 'end'
+            : 'combat'
+          : 'pending';
+
+  const pageTransitionKey = `${playthrough.currentNodeId}:${renderedView}`;
+
+  const pageContainerRef = useRef<HTMLDivElement | null>(null);
+  const lastTransitionRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (onTitleScreen || renderedView === 'pending') return;
+    if (lastTransitionRef.current === null) {
+      lastTransitionRef.current = pageTransitionKey;
+      return;
+    }
+    if (lastTransitionRef.current !== pageTransitionKey) {
+      lastTransitionRef.current = pageTransitionKey;
+      try {
+        window.scrollTo?.(0, 0);
+      } catch {
+        // Ignore unimplemented scrollTo in synthetic environments
+      }
+      const heading = pageContainerRef.current?.querySelector<HTMLElement>('[data-page-heading]');
+      heading?.focus();
+    }
+  }, [onTitleScreen, pageTransitionKey, renderedView]);
+
   if (onTitleScreen) {
     return (
       <div className="player-shell" data-testid="story-player">
@@ -516,6 +550,12 @@ export function StoryPlayer({
         />
       )}
 
+      <div
+        key={pageTransitionKey}
+        ref={pageContainerRef}
+        className="page-turn-frame"
+        data-testid="page-turn-frame"
+      >
       {unwiredNotice ? (
         <section className="story-caption-box" data-testid="unwired-exit-message">
           <p>{unwiredNotice}</p>
@@ -572,6 +612,7 @@ export function StoryPlayer({
           />
         )
       ) : null}
+      </div>
     </div>
   );
 }
@@ -603,8 +644,19 @@ function PassageView({
           <h2 className="passage-page__display-title">{node.title}</h2>
         </div>
       )}
+      {!resolvedImage && null}
       <div className="passage-page__caption" data-testid="passage-caption-panel">
-        {resolvedImage && <h2 className="passage-page__display-title">{node.title}</h2>}
+        <h2
+          className={
+            resolvedImage
+              ? 'passage-page__display-title page-heading-focus'
+              : 'sr-only page-heading-focus'
+          }
+          tabIndex={-1}
+          data-page-heading
+        >
+          {node.title}
+        </h2>
         <p>{node.text}</p>
       </div>
       {!node.isEnding && visibleChoices.length > 0 ? (

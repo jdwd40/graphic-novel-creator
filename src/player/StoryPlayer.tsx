@@ -26,6 +26,7 @@ import {
   saveReaderSettings,
   type ReaderSettings,
 } from '../story/settings';
+import { makeFallbackArt } from '../story/artwork';
 import type { EncounterNode, PassageNode, Story } from '../story/types';
 import { useImageUrl } from '../story/useImageUrl';
 import { BattleGuideModal } from './BattleGuideModal';
@@ -549,7 +550,7 @@ export function StoryPlayer({
         <div className="test-play-banner" role="status" data-testid="test-play-banner">
           <span>{testPlayBanner}</span>
           {onExitToBuilder && (
-            <button type="button" className="reader-hud__btn" onClick={onExitToBuilder}>
+            <button type="button" className="test-play-banner__btn" onClick={onExitToBuilder}>
               Back to builder
             </button>
           )}
@@ -596,14 +597,14 @@ export function StoryPlayer({
         data-testid="page-turn-frame"
       >
         {unwiredNotice ? (
-          <section className="story-caption-box" data-testid="unwired-exit-message">
+          <section className="story-caption-box story-dead-end" data-testid="unwired-exit-message">
             <p>{unwiredNotice}</p>
             <button type="button" className="story-choice-btn" onClick={handleRestart}>
               Return to start
             </button>
           </section>
         ) : !currentNode ? (
-          <section className="story-caption-box">
+          <section className="story-caption-box story-dead-end">
             <p>This path is not written yet</p>
             <button type="button" className="story-choice-btn" onClick={handleRestart}>
               Return to start
@@ -690,17 +691,24 @@ function PassageView({
   const resolvedImage = useImageUrl(node.image);
 
   return (
-    <article className="passage-page" data-testid={`passage-view-${node.id}`}>
+    <article
+      className={`passage-page ${node.isEnding ? 'passage-page--ending' : ''}`.trim()}
+      data-testid={`passage-view-${node.id}`}
+    >
       {resolvedImage ? (
         <div className="passage-page__art-stage" data-testid="passage-art-stage">
           <img src={resolvedImage} alt={node.title} className="passage-page__art-img" />
+          <span className="art-fx" aria-hidden="true" />
         </div>
       ) : (
-        <div className="passage-page__no-art-banner" data-testid="passage-no-art-banner">
+        <div
+          className="passage-page__no-art-banner"
+          data-testid="passage-no-art-banner"
+          style={{ backgroundImage: `url("${makeFallbackArt(node.title, 'place')}")` }}
+        >
           <h2 className="passage-page__display-title">{node.title}</h2>
         </div>
       )}
-      {!resolvedImage && null}
       <div className="passage-page__caption" data-testid="passage-caption-panel">
         <h2
           className={
@@ -720,11 +728,11 @@ function PassageView({
       ) : (
         <div className="story-ending-actions">
           {node.isEnding && (
-            <span className="story-node__badge story-node__badge--end" data-testid="passage-ending-badge">
+            <span className="story-node__badge story-node__badge--end ending-stamp" data-testid="passage-ending-badge">
               Ending
             </span>
           )}
-          <button type="button" className="story-choice-btn" onClick={onRestart}>
+          <button type="button" className="story-choice-btn story-choice-btn--primary" onClick={onRestart}>
             Play again
           </button>
         </div>

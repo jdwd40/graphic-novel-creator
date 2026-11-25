@@ -13,6 +13,7 @@ import { ChoiceList } from './ChoiceList';
 import { HealthPips } from './HealthPips';
 import { TacticBar } from './TacticBar';
 import { TellBanner } from './TellBanner';
+import { ART_PLAYER_PORTRAIT, makeFallbackArt } from '../story/artwork';
 import { useImageUrl } from '../story/useImageUrl';
 import './CombatScreen.css';
 
@@ -103,8 +104,10 @@ export function CombatScreen({
             : null
       : null;
   const rawImageSource = artSrc ?? feedbackArtOverride ?? selectEncounterArt(encounter, fightState);
-  const imageSource = useImageUrl(rawImageSource);
-  const portraitUrl = useImageUrl(playerPortrait);
+  const imageSource =
+    useImageUrl(rawImageSource) ?? makeFallbackArt(encounter.enemy.name || 'Unknown foe', 'foe');
+  const portraitUrl = useImageUrl(playerPortrait) ?? ART_PLAYER_PORTRAIT;
+  const upcomingMoveClass = hasOpenMoment || !tell.showIcon ? '' : `combat-screen--tell-${tell.move}`;
 
   const stageFeedbackClasses = [
     'combat-art-stage',
@@ -119,7 +122,7 @@ export function CombatScreen({
 
   return (
     <section
-      className="combat-screen"
+      className={`combat-screen ${upcomingMoveClass}`.trim()}
       aria-label={`Combat with ${encounter.enemy.name}`}
       data-testid="combat-screen"
     >
@@ -133,22 +136,10 @@ export function CombatScreen({
           data-testid="combat-player-side"
         >
           <div className="combat-portrait-wrap">
-            {portraitUrl ? (
-              <img
-                src={portraitUrl}
-                alt="Player portrait"
-                className="combat-portrait-img"
-              />
-            ) : (
-              <div className="combat-portrait-fallback" aria-label="Player portrait">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6" />
-                </svg>
-              </div>
-            )}
+            <img src={portraitUrl} alt="Player portrait" className="combat-portrait-img" />
           </div>
           <div className="combat-side__pips">
+            <div className="combat-side__name" aria-hidden="true">You</div>
             <HealthPips
               label="Health"
               variant="player"
@@ -161,6 +152,8 @@ export function CombatScreen({
             />
           </div>
         </div>
+
+        <span className="combat-vs" aria-hidden="true">VS</span>
 
         <div
           className={`combat-side combat-side--enemy ${feedback?.enemyHit ? 'is-enemy-hit' : ''} ${feedback?.reducedMotion ? 'is-reduced-motion' : ''}`.trim()}
@@ -198,6 +191,9 @@ export function CombatScreen({
             className="combat-art-img"
           />
 
+          <span className="art-fx" aria-hidden="true" />
+          {feedback && <span className="combat-impact-flash" aria-hidden="true" />}
+
           {feedback?.sfxText && (
             <span
               className={`combat-sfx-badge combat-sfx-badge--${feedback.sfxVariant}`}
@@ -212,47 +208,52 @@ export function CombatScreen({
           )}
         </div>
 
-        <div className="story-caption-box" data-testid="combat-result-caption">
+        <div
+          className={`story-caption-box combat-caption ${hasOpenMoment ? 'combat-caption--moment' : ''}`.trim()}
+          data-testid="combat-result-caption"
+        >
           {activeMoment ? activeMoment.moment.caption : resultCaption}
         </div>
       </div>
 
-      {hasOpenMoment ? (
-        <div data-testid="moment-choices-panel">
-          <ChoiceList
-            ariaLabel="Moment choices"
-            choices={availableMomentChoices.map((c) => ({
-              id: String(c.choiceIndex),
-              label: c.choice.label,
-            }))}
-            onSelect={(id) => onSelectMomentChoice?.(Number(id))}
+      <div className="combat-dock" data-testid="combat-dock">
+        {hasOpenMoment ? (
+          <div data-testid="moment-choices-panel">
+            <ChoiceList
+              ariaLabel="Moment choices"
+              choices={availableMomentChoices.map((c) => ({
+                id: String(c.choiceIndex),
+                label: c.choice.label,
+              }))}
+              onSelect={(id) => onSelectMomentChoice?.(Number(id))}
+            />
+          </div>
+        ) : (
+          <TacticBar
+            currentTactic={fightState.currentTactic}
+            allowRetreat={encounter.allowRetreat}
+            onSelectTactic={onSelectTactic}
+            onRetreat={onRetreat}
           />
-        </div>
-      ) : (
-        <TacticBar
-          currentTactic={fightState.currentTactic}
-          allowRetreat={encounter.allowRetreat}
-          onSelectTactic={onSelectTactic}
-          onRetreat={onRetreat}
-        />
-      )}
-
-      <div className="combat-advance-area">
-        <button
-          type="button"
-          className="combat-next-btn"
-          data-testid="combat-next-btn"
-          disabled={hasOpenMoment || fightState.status !== 'ongoing'}
-          onClick={onAdvanceBeat}
-        >
-          Next beat
-        </button>
-
-        {!hasOpenMoment && fightState.beatNumber < 3 && (
-          <p className="combat-tap-hint" data-testid="combat-tap-hint">
-            Tap panel or caption to advance one beat
-          </p>
         )}
+
+        <div className="combat-advance-area">
+          <button
+            type="button"
+            className="combat-next-btn"
+            data-testid="combat-next-btn"
+            disabled={hasOpenMoment || fightState.status !== 'ongoing'}
+            onClick={onAdvanceBeat}
+          >
+            Next beat
+          </button>
+
+          {!hasOpenMoment && fightState.beatNumber < 3 && (
+            <p className="combat-tap-hint" data-testid="combat-tap-hint">
+              Tap panel or caption to advance one beat
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );

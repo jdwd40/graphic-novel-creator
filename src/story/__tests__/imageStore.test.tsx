@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useState } from 'react';
 import {
   clearImageStoreForTests,
@@ -180,17 +180,18 @@ describe('external imageStore (#38)', () => {
     setImageStoreErrorForTests(null);
 
     // Also verify story save failures surface visibly in StoryMapBuilder
-    const originalSetItem = localStorage.setItem;
-    localStorage.setItem = () => {
+    // jsdom treats assignment on a Storage object as storing an item, so the
+    // method has to be replaced on the prototype for the failure to reach saveStory.
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('Storage quota full');
-    };
+    });
     try {
       const seed = createSeedStory();
       render(<StoryMapBuilder story={seed} onStoryChange={() => {}} />);
       fireEvent.click(screen.getByRole('button', { name: /add passage/i }));
       expect(screen.getByTestId('story-save-error')).toHaveTextContent(/Storage quota full/i);
     } finally {
-      localStorage.setItem = originalSetItem;
+      setItemSpy.mockRestore();
     }
   });
 });

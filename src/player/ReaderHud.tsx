@@ -53,7 +53,17 @@ export function ReaderHud({
             aria-label={satchelOpen ? 'Close satchel' : 'Open satchel'}
             onClick={onToggleSatchel}
           >
-            Satchel
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M8 8V6a4 4 0 0 1 8 0v2M5 8h14l1.2 10.2A2.5 2.5 0 0 1 17.7 21H6.3a2.5 2.5 0 0 1-2.5-2.8L5 8Zm4 5h6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span>Satchel</span>
           </button>
 
           <button
@@ -66,7 +76,10 @@ export function ReaderHud({
               setConfirmRestart(false);
             }}
           >
-            Menu
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" />
+            </svg>
+            <span>Menu</span>
           </button>
 
           {onExitToBuilder && (
@@ -76,7 +89,17 @@ export function ReaderHud({
               aria-label="Exit to builder"
               onClick={onExitToBuilder}
             >
-              Exit
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 8l-4 4 4 4M6 12h10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="sr-only">Exit</span>
             </button>
           )}
         </div>

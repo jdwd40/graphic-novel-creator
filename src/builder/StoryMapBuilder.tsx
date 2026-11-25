@@ -323,6 +323,7 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
               <PassageInspector
                 key={selectedNode.id}
                 node={selectedNode}
+                story={story}
                 onUpdate={(nextPassage) => {
                   commitStory({
                     ...story,

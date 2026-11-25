@@ -8,6 +8,7 @@ import type {
   ToughnessPreset,
 } from '../combat/types';
 import type { EncounterNode } from '../story/types';
+import { ArtVariantsEditor } from './ArtVariantsEditor';
 import { BalancePreviewPanel } from './BalancePreviewPanel';
 import { BossEditor } from './BossEditor';
 import { CaptionEditor } from './CaptionEditor';
@@ -290,6 +291,8 @@ export function EncounterInspector({ node, onUpdate }: EncounterInspectorProps) 
       </details>
 
       <CaptionEditor encounter={encounter} onUpdate={onUpdate} />
+
+      <ArtVariantsEditor encounter={encounter} onUpdate={onUpdate} />
 
       <StoryIntegrationEditor encounter={encounter} onUpdate={onUpdate} />
 

@@ -1,3 +1,4 @@
+import { selectEncounterArt } from '../combat/art';
 import { nextTell } from '../combat/captions';
 import { EMPTY_STORY_STATE } from '../combat/conditions';
 import { getActiveMoment, getAvailableMomentChoices } from '../combat/resolver';
@@ -82,9 +83,7 @@ export function CombatScreen({
   const availableMomentChoices = activeMoment
     ? getAvailableMomentChoices(fightState, encounter, storyState)
     : [];
-  const phaseArt =
-    fightState.phase > 0 ? encounter.phases?.[fightState.phase - 1]?.image : undefined;
-  const imageSource = artSrc ?? (phaseArt && phaseArt.trim() !== '' ? phaseArt : encounter.enemy.image);
+  const imageSource = artSrc ?? selectEncounterArt(encounter, fightState);
 
   return (
     <section

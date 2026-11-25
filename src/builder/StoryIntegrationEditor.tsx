@@ -13,6 +13,7 @@ import { ConditionEditor, EffectsListEditor } from './ConditionEffectEditors';
 export interface StoryIntegrationEditorProps {
   encounter: Encounter;
   story?: Story;
+  section?: 'all' | 'storyLinks' | 'outcomes';
   onUpdate: (nextEncounter: Encounter) => void;
 }
 
@@ -52,8 +53,11 @@ function defaultMoment(): Moment {
 export function StoryIntegrationEditor({
   encounter,
   story,
+  section = 'all',
   onUpdate,
 }: StoryIntegrationEditorProps) {
+  const showStoryLinks = section === 'all' || section === 'storyLinks';
+  const showOutcomes = section === 'all' || section === 'outcomes';
   const [newExitLabel, setNewExitLabel] = useState('');
 
   const modifiers = encounter.modifiers ?? [];
@@ -116,8 +120,10 @@ export function StoryIntegrationEditor({
 
   return (
     <div className="story-integration-editor" data-testid="story-integration-editor">
-      <details className="inspector-advanced">
-        <summary>Modifiers ({modifiers.length})</summary>
+      {showStoryLinks && (
+        <>
+          <details className="inspector-advanced">
+            <summary>Modifiers ({modifiers.length})</summary>
         <div className="inspector-advanced-body">
           {modifiers.map((mod, idx) => {
             return (
@@ -548,7 +554,10 @@ export function StoryIntegrationEditor({
           </button>
         </div>
       </details>
+        </>
+      )}
 
+      {showOutcomes && (
       <details className="inspector-advanced">
         <summary>Exits &amp; Exit Effects ({exitKeys.length})</summary>
         <div className="inspector-advanced-body">
@@ -605,6 +614,7 @@ export function StoryIntegrationEditor({
           })}
         </div>
       </details>
+      )}
     </div>
   );
 }

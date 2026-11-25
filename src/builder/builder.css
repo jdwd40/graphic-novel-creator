@@ -607,6 +607,55 @@
   font-size: 0.78rem;
 }
 
+.inspector-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  border-bottom: 2px solid #cbd5e1;
+  padding-bottom: 0.45rem;
+}
+
+.inspector-tab {
+  padding: 0.3rem 0.55rem !important;
+  font-size: 0.78rem !important;
+  border-radius: 6px;
+}
+
+.inspector-tab[aria-selected='true'],
+.inspector-tab.is-active {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  border-color: #1e40af !important;
+}
+
+.inspector-tab-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.inspector-section-heading {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.inspector-help-text {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #475569;
+}
+
+.inspector-pinned-preview {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  border-top: 2px solid #cbd5e1;
+  padding-top: 0.65rem;
+}
+
 .image-library-panel {
   display: flex;
   flex-direction: column;

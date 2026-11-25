@@ -49,7 +49,8 @@ describe('StoryIntegrationEditor for modifiers, moments, and custom exits', () =
 
     fireEvent.click(screen.getByTestId('encounter-node-enc_build'));
 
-    // Add a custom Surrender exit -> Surrender handle appears on node
+    // Add a custom Surrender exit on Outcomes tab -> Surrender handle appears on node
+    fireEvent.click(screen.getByRole('tab', { name: 'Outcomes' }));
     fireEvent.click(screen.getByText(/Exits & Exit Effects/i));
     fireEvent.change(screen.getByLabelText(/new custom exit name/i), {
       target: { value: 'Surrender' },
@@ -63,11 +64,11 @@ describe('StoryIntegrationEditor for modifiers, moments, and custom exits', () =
       target: { value: 'brute_spared' },
     });
 
-    // Add a modifier and toggle it in balance preview
+    // Switch to Story links tab to add a modifier and a moment pointing to surrender
+    fireEvent.click(screen.getByRole('tab', { name: 'Story links' }));
     fireEvent.click(screen.getByText(/Modifiers \(0\)/i));
     fireEvent.click(screen.getByRole('button', { name: /add modifier/i }));
 
-    // Add a moment pointing to surrender, then remove surrender to trigger validation error
     fireEvent.click(screen.getByText(/Moments \(0\)/i));
     fireEvent.click(screen.getByRole('button', { name: /add moment/i }));
     fireEvent.change(screen.getByLabelText('Moment 1 choice 2 exit'), {
@@ -81,7 +82,9 @@ describe('StoryIntegrationEditor for modifiers, moments, and custom exits', () =
     expect(savedEnc.modifiers).toHaveLength(1);
     expect(savedEnc.moments).toHaveLength(1);
 
-    // Removing Surrender exit while moment still points to it triggers validation error
+    // Removing Surrender exit on Outcomes tab while moment still points to it triggers validation error
+    fireEvent.click(screen.getByRole('tab', { name: 'Outcomes' }));
+    fireEvent.click(screen.getByText(/Exits & Exit Effects/i));
     fireEvent.click(screen.getByRole('button', { name: 'Remove exit surrender' }));
     expect(
       screen.getByRole('button', { name: /references missing exit "surrender"/i }),
@@ -97,7 +100,8 @@ describe('StoryIntegrationEditor for modifiers, moments, and custom exits', () =
     const row1Before = screen.getByRole('row', { name: /Tier 1/i });
     expect(within(row1Before).getByText('Defeated on beat 3')).toBeInTheDocument();
 
-    // Add an enemyHealth -9 modifier and toggle it on in the preview
+    // Add an enemyHealth -9 modifier on Story links tab and toggle it on in the pinned preview
+    fireEvent.click(screen.getByRole('tab', { name: 'Story links' }));
     fireEvent.click(screen.getByText(/Modifiers \(1\)/i));
     fireEvent.click(screen.getByRole('button', { name: /add modifier/i }));
     fireEvent.change(screen.getByLabelText('Modifier 2 value'), {

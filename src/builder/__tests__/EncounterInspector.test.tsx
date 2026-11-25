@@ -44,6 +44,7 @@ describe('EncounterInspector', () => {
     fireEvent.change(screen.getByLabelText(/toughness/i), {
       target: { value: 'tough' },
     });
+    fireEvent.click(screen.getByRole('tab', { name: 'Fight' }));
     fireEvent.change(screen.getByLabelText(/behaviour/i), {
       target: { value: 'brute' },
     });
@@ -63,6 +64,7 @@ describe('EncounterInspector', () => {
   it('switches behaviour to custom and preserves edits when pattern is modified by hand', () => {
     render(<InspectorHarness />);
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Fight' }));
     fireEvent.click(screen.getByText(/advanced encounter settings/i));
     fireEvent.change(screen.getByLabelText(/pattern move 1/i), {
       target: { value: 'heavy' },
@@ -77,6 +79,7 @@ describe('EncounterInspector', () => {
   it('stores copied preset values directly on the encounter object', () => {
     render(<InspectorHarness />);
     fireEvent.change(screen.getByLabelText(/toughness/i), { target: { value: 'weak' } });
+    fireEvent.click(screen.getByRole('tab', { name: 'Fight' }));
     fireEvent.change(screen.getByLabelText(/behaviour/i), { target: { value: 'skirmisher' } });
 
     const saved = JSON.parse(screen.getByTestId('stored-json').textContent!) as Encounter;
@@ -84,5 +87,21 @@ describe('EncounterInspector', () => {
     expect(saved.enemy.hit).toBe(1);
     expect(saved.tellClarity).toBe('clear');
     expect(saved.pattern).toEqual(['strike', 'strike', 'strike', 'open']);
+  });
+
+  it('shows Boss tab only for boss toughness and keeps BalancePreviewPanel visible across every tab (#61)', () => {
+    render(<InspectorHarness />);
+
+    expect(screen.queryByRole('tab', { name: 'Boss' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('pinned-balance-preview')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/toughness/i), { target: { value: 'boss' } });
+    expect(screen.getByRole('tab', { name: 'Boss' })).toBeInTheDocument();
+
+    for (const tabName of ['Enemy', 'Fight', 'Story links', 'Outcomes', 'Boss']) {
+      fireEvent.click(screen.getByRole('tab', { name: tabName }));
+      expect(screen.getByTestId('pinned-balance-preview')).toBeInTheDocument();
+    }
+    expect(screen.getByTestId('boss-editor')).toBeInTheDocument();
   });
 });

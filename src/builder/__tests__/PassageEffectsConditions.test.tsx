@@ -53,8 +53,8 @@ describe('Passage and choice effects & conditions (#44)', () => {
     // Clicking first choice adds those items to player state in StoryPlayer
     fireEvent.click(screen.getByRole('button', { name: /gear up at the watch armory/i }));
     fireEvent.click(screen.getByRole('button', { name: /open satchel/i }));
-    expect(screen.getByLabelText(/gear and wounds/i)).toHaveTextContent(/Rusty Sword/i);
-    expect(screen.getByLabelText(/gear and wounds/i)).toHaveTextContent(/Padded Coat/i);
+    expect(screen.getByRole('dialog', { name: /satchel/i })).toHaveTextContent(/Rusty Sword/i);
+    expect(screen.getByRole('dialog', { name: /satchel/i })).toHaveTextContent(/Padded Coat/i);
   });
 
   it('allows selecting known flags or adding a new flag on passage effects', () => {

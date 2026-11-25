@@ -32,6 +32,7 @@ import { ChoiceList } from './ChoiceList';
 import { CombatScreen, type CombatFeedbackState } from './CombatScreen';
 import { EndOfFightPage } from './EndOfFightPage';
 import { ReaderHud } from './ReaderHud';
+import { SatchelSheet } from './SatchelSheet';
 import { deriveHitFeedback } from './hitFeedback';
 import './PlayerTheme.css';
 
@@ -287,9 +288,9 @@ export function StoryPlayer({
     });
   }, [currentNode, playthrough, updatePlaythrough]);
 
-  // Auto-advance timer when reader setting is enabled.
+  // Auto-advance timer when reader setting is enabled (paused while Satchel sheet is open).
   useEffect(() => {
-    if (!readerSettings.autoAdvance) return;
+    if (!readerSettings.autoAdvance || showInventory) return;
     if (!currentNode || currentNode.kind !== 'encounter') return;
     const active = playthrough.activeFight;
     if (!active || active.encounterId !== currentNode.id) return;
@@ -314,6 +315,7 @@ export function StoryPlayer({
     playthrough.activeFight,
     readerSettings.autoAdvance,
     resultCaption,
+    showInventory,
     tacticTouchCount,
   ]);
 
@@ -442,24 +444,13 @@ export function StoryPlayer({
       />
 
       {showInventory && (
-        <section className="story-caption-box" aria-label="Gear and wounds">
-          <div>
-            <strong>Weapon:</strong>{' '}
-            {playthrough.combat.weapon?.name ?? 'Bare hands'}
-          </div>
-          <div>
-            <strong>Armour:</strong>{' '}
-            {playthrough.combat.armour?.name ?? 'No armour'}
-          </div>
-          <div>
-            <strong>Wounds:</strong>{' '}
-            {playthrough.combat.wounds.length === 0
-              ? 'None'
-              : playthrough.combat.wounds
-                  .map((w) => `${w.name} (${w.description})`)
-                  .join(', ')}
-          </div>
-        </section>
+        <SatchelSheet
+          story={story}
+          combat={playthrough.combat}
+          carriedItemIds={playthrough.items}
+          wounds={playthrough.combat.wounds}
+          onClose={() => setShowInventory(false)}
+        />
       )}
 
       {playthrough.notifications.length > 0 && (

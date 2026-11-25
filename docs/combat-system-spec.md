@@ -39,7 +39,7 @@ Rules the picture does not show:
 
 - **Standing tactic.** The chosen tactic stays in force until the reader changes it. Changing is free and applies to the beat about to resolve.
 - **Order.** The player's hit lands first. An enemy reduced to zero health does not strike back.
-- **Retreat.** A Retreat button sits beside the tactics unless the creator disables it. The enemy takes one free Strike, then the fight leaves by the Retreat exit.
+- **Retreat.** A Retreat button sits beside the tactics unless the creator disables it. The enemy takes one free Strike (resolved as if on Steady), then the fight leaves by the Retreat exit — or by Defeat if that Strike reduces the player to 0 health.
 - **Auto-advance.** A reader setting can advance beats after a reading delay. It is off by default and always stops at a moment.
 
 ## Stats and equipment
@@ -294,10 +294,10 @@ These mechanics are excluded on purpose. Each one either adds a second game to l
 
 Six decisions are still open:
 
-- [ ] Armour as a per-fight buffer departs from the original brief, which had armour reduce incoming damage. Confirm the buffer or revert.
+- [x] **Confirmed (Issue #2):** Armour stays a per-fight buffer (tiers 2, 4, and 6 pips) that absorbs damage before health and refills after every fight.
 - [ ] Guarding everything except Open beats is slow but slightly safer against a Tough Brute at tier 1: 9 beats and 1 health lost, against 6 beats and 2 for careful play. Decide whether a beat cap is needed.
 - [ ] Health only returns through story effects. Decide whether the app should offer a standard "rest" effect so creators do not starve readers by accident.
-- [ ] Retreat currently costs one free enemy Strike. Decide whether it should be free, or priced per encounter.
+- [x] **Confirmed (Issue #3):** Retreat costs one free enemy Strike (resolved as if on Steady); if that Strike takes the player to 0 health, the fight leaves by Defeat. Per-encounter pricing is deferred until creators ask for it.
 - [ ] Enemy health shows as exact pips. A vaguer state such as fresh, hurt and staggering would read more like a story but hides the race.
 - [ ] Boss numbers and the three rule-breaks need a simulation pass before they are offered to creators.
 

@@ -319,6 +319,36 @@
   color: #e2e8f0;
 }
 
+.combat-art-stage.is-enemy-hit {
+  box-shadow: inset 0 0 0 4px rgba(250, 204, 21, 0.9);
+  animation: enemy-hit-flash 0.28s ease-out;
+}
+
+.combat-art-stage.is-heavy-blocked {
+  box-shadow: inset 0 0 0 4px #38bdf8;
+  animation: heavy-block-pulse 0.28s ease-out;
+}
+
+.combat-art-stage.is-open-punished {
+  box-shadow: inset 0 0 0 4px #f59e0b;
+  animation: enemy-hit-flash 0.28s ease-out;
+}
+
+.combat-side--player.is-player-hit {
+  border-color: #dc2626;
+  background: #fef2f2;
+  animation: combat-shake 0.25s ease-in-out;
+}
+
+.combat-side--enemy.is-enemy-hit {
+  border-color: #d97706;
+  background: #fffbeb;
+}
+
+.is-reduced-motion {
+  animation: none !important;
+}
+
 .pip.is-breaking {
   animation: pip-break 0.3s ease-out;
 }
@@ -375,14 +405,16 @@
 
 .combat-sfx-badge {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-7deg);
-  padding: 0.25rem 0.7rem;
+  top: 0.55rem;
+  right: 0.65rem;
+  z-index: 5;
+  transform: rotate(7deg);
+  padding: 0.22rem 0.65rem;
   border: 3px solid #111827;
   border-radius: 6px;
+  font-family: var(--font-display, inherit);
   font-weight: 900;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   pointer-events: none;
@@ -397,6 +429,11 @@
 .combat-sfx-badge--heavy-blocked {
   background: #38bdf8;
   color: #0f172a;
+}
+
+.combat-sfx-badge--open-punished {
+  background: #f59e0b;
+  color: #111827;
 }
 
 .combat-sfx-badge--normal {
@@ -588,16 +625,20 @@
 }
 
 @keyframes combat-shake {
+
   0%,
   100% {
     transform: translateX(0);
   }
+
   25% {
     transform: translateX(-6px);
   }
+
   50% {
     transform: translateX(6px);
   }
+
   75% {
     transform: translateX(-4px);
   }
@@ -608,14 +649,40 @@
     transform: scale(1.35);
     opacity: 1;
   }
+
   100% {
     transform: scale(1);
     opacity: 0.45;
   }
 }
 
+@keyframes enemy-hit-flash {
+  0% {
+    filter: brightness(1.3);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes heavy-block-pulse {
+  0% {
+    filter: saturate(1.4);
+  }
+
+  100% {
+    filter: saturate(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+
   .combat-art-stage.is-shaking,
+  .combat-art-stage.is-enemy-hit,
+  .combat-art-stage.is-heavy-blocked,
+  .combat-art-stage.is-open-punished,
+  .combat-side--player.is-player-hit,
   .pip.is-breaking {
     animation: none;
   }

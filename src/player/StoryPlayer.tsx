@@ -304,11 +304,11 @@ export function StoryPlayer({
       nextFight.status === 'finished'
         ? undefined
         : deriveHitFeedback(
-            active.fight,
-            nextFight,
-            step.events,
-            active.fight.currentTactic,
-          ),
+          active.fight,
+          nextFight,
+          step.events,
+          active.fight.currentTactic,
+        ),
     );
 
     updatePlaythrough({
@@ -445,7 +445,7 @@ export function StoryPlayer({
 
   const liveFight =
     currentNode?.kind === 'encounter' &&
-    playthrough.activeFight?.encounterId === currentNode.id
+      playthrough.activeFight?.encounterId === currentNode.id
       ? playthrough.activeFight.fight
       : null;
   const displayedHealth = liveFight
@@ -574,63 +574,63 @@ export function StoryPlayer({
         className="page-turn-frame"
         data-testid="page-turn-frame"
       >
-      {unwiredNotice ? (
-        <section className="story-caption-box" data-testid="unwired-exit-message">
-          <p>{unwiredNotice}</p>
-          <button type="button" className="story-choice-btn" onClick={handleRestart}>
-            Return to start
-          </button>
-        </section>
-      ) : !currentNode ? (
-        <section className="story-caption-box">
-          <p>This path is not written yet</p>
-          <button type="button" className="story-choice-btn" onClick={handleRestart}>
-            Return to start
-          </button>
-        </section>
-      ) : currentNode.kind === 'passage' ? (
-        <PassageView
-          node={currentNode}
-          storyState={{
-            flags: playthrough.flags,
-            items: playthrough.items,
-            stats: { ...playthrough.stats, health: playthrough.combat.health },
-          }}
-          onChoice={handlePassageChoice}
-          onRestart={handleRestart}
-        />
-      ) : playthrough.activeFight && playthrough.activeFight.encounterId === currentNode.id ? (
-        playthrough.activeFight.fight.status === 'finished' ? (
-          <EndOfFightPage
-            encounter={currentNode.encounter}
-            fightState={playthrough.activeFight.fight}
-            onContinue={() =>
-              completeEncounter(currentNode, playthrough.activeFight!.fight)
-            }
-          />
-        ) : (
-          <CombatScreen
-            encounter={currentNode.encounter}
-            fightState={playthrough.activeFight.fight}
-            playerPortrait={story.playerPortrait}
+        {unwiredNotice ? (
+          <section className="story-caption-box" data-testid="unwired-exit-message">
+            <p>{unwiredNotice}</p>
+            <button type="button" className="story-choice-btn" onClick={handleRestart}>
+              Return to start
+            </button>
+          </section>
+        ) : !currentNode ? (
+          <section className="story-caption-box">
+            <p>This path is not written yet</p>
+            <button type="button" className="story-choice-btn" onClick={handleRestart}>
+              Return to start
+            </button>
+          </section>
+        ) : currentNode.kind === 'passage' ? (
+          <PassageView
+            node={currentNode}
             storyState={{
               flags: playthrough.flags,
               items: playthrough.items,
               stats: { ...playthrough.stats, health: playthrough.combat.health },
             }}
-            resultCaption={
-              playthrough.activeFight.lastResultCaption ||
-              resultCaption ||
-              `${currentNode.encounter.enemy.name} bars your path.`
-            }
-            feedback={feedback}
-            onAdvanceBeat={handleAdvanceBeat}
-            onSelectTactic={handleSelectTactic}
-            onRetreat={handleRetreat}
-            onSelectMomentChoice={handleSelectMomentChoice}
+            onChoice={handlePassageChoice}
+            onRestart={handleRestart}
           />
-        )
-      ) : null}
+        ) : playthrough.activeFight && playthrough.activeFight.encounterId === currentNode.id ? (
+          playthrough.activeFight.fight.status === 'finished' ? (
+            <EndOfFightPage
+              encounter={currentNode.encounter}
+              fightState={playthrough.activeFight.fight}
+              onContinue={() =>
+                completeEncounter(currentNode, playthrough.activeFight!.fight)
+              }
+            />
+          ) : (
+            <CombatScreen
+              encounter={currentNode.encounter}
+              fightState={playthrough.activeFight.fight}
+              playerPortrait={story.playerPortrait}
+              storyState={{
+                flags: playthrough.flags,
+                items: playthrough.items,
+                stats: { ...playthrough.stats, health: playthrough.combat.health },
+              }}
+              resultCaption={
+                playthrough.activeFight.lastResultCaption ||
+                resultCaption ||
+                `${currentNode.encounter.enemy.name} bars your path.`
+              }
+              feedback={feedback}
+              onAdvanceBeat={handleAdvanceBeat}
+              onSelectTactic={handleSelectTactic}
+              onRetreat={handleRetreat}
+              onSelectMomentChoice={handleSelectMomentChoice}
+            />
+          )
+        ) : null}
       </div>
     </div>
   );

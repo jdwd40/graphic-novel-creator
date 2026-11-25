@@ -17,8 +17,13 @@ import './CombatScreen.css';
 
 export interface CombatFeedbackState {
   sfxText: string | null;
-  sfxVariant: 'heavy-landed' | 'heavy-blocked' | 'normal';
+  sfxVariant: 'heavy-landed' | 'heavy-blocked' | 'open-punished' | 'normal';
   shakePlayer: boolean;
+  enemyHit: boolean;
+  playerHit: boolean;
+  heavyBlocked: boolean;
+  openPunished: boolean;
+  reducedMotion: boolean;
   enemyLostPips: number;
   playerLostPips: number;
   bufferLostPips: number;
@@ -57,9 +62,30 @@ export function CombatScreen({
   const availableMomentChoices = activeMoment
     ? getAvailableMomentChoices(fightState, encounter, storyState)
     : [];
-  const rawImageSource = artSrc ?? selectEncounterArt(encounter, fightState);
+  const feedbackArtOverride =
+    !artSrc && feedback
+      ? feedback.enemyHit && encounter.art?.enemyWounded
+        ? encounter.art.enemyWounded
+        : feedback.playerHit && encounter.art?.playerWounded
+          ? encounter.art.playerWounded
+          : feedback.openPunished && encounter.art?.open
+            ? encounter.art.open
+            : null
+      : null;
+  const rawImageSource = artSrc ?? feedbackArtOverride ?? selectEncounterArt(encounter, fightState);
   const imageSource = useImageUrl(rawImageSource);
   const portraitUrl = useImageUrl(playerPortrait);
+
+  const stageFeedbackClasses = [
+    'combat-art-stage',
+    feedback?.shakePlayer ? 'is-shaking' : '',
+    feedback?.enemyHit ? 'is-enemy-hit' : '',
+    feedback?.heavyBlocked ? 'is-heavy-blocked' : '',
+    feedback?.openPunished ? 'is-open-punished' : '',
+    feedback?.reducedMotion ? 'is-reduced-motion' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <section
@@ -73,7 +99,7 @@ export function CombatScreen({
 
       <div className="combat-paired-header" data-testid="combat-paired-header">
         <div
-          className={`combat-side combat-side--player ${feedback?.shakePlayer ? 'is-player-hit' : ''}`}
+          className={`combat-side combat-side--player ${feedback?.playerHit ? 'is-player-hit' : ''} ${feedback?.reducedMotion ? 'is-reduced-motion' : ''}`.trim()}
           data-testid="combat-player-side"
         >
           <div className="combat-portrait-wrap">
@@ -106,7 +132,10 @@ export function CombatScreen({
           </div>
         </div>
 
-        <div className="combat-side combat-side--enemy" data-testid="combat-enemy-side">
+        <div
+          className={`combat-side combat-side--enemy ${feedback?.enemyHit ? 'is-enemy-hit' : ''} ${feedback?.reducedMotion ? 'is-reduced-motion' : ''}`.trim()}
+          data-testid="combat-enemy-side"
+        >
           <div className="combat-side__enemy-name">{encounter.enemy.name}</div>
           <div className="combat-side__pips">
             <HealthPips
@@ -130,7 +159,7 @@ export function CombatScreen({
         }}
       >
         <div
-          className={`combat-art-stage ${feedback?.shakePlayer ? 'is-shaking' : ''}`}
+          className={stageFeedbackClasses}
           data-testid="combat-art-stage"
         >
           <img

@@ -21,10 +21,12 @@ export function deriveHitFeedback(
   const playerWasHit = events.some(
     (e) => e.type === 'playerDamaged' || e.type === 'bufferAbsorbed',
   );
+  const enemyHit = enemyLostPips > 0;
 
   const moveEvent = events.find((e) => e.type === 'enemyMove');
   const move = moveEvent?.move ?? 'strike';
   const heavyBlocked = events.some((e) => e.type === 'heavyBlocked');
+  const openPunished = move === 'open' && enemyHit;
 
   let sfxText: string | null = null;
   let sfxVariant: CombatFeedbackState['sfxVariant'] = 'normal';
@@ -36,9 +38,15 @@ export function deriveHitFeedback(
     sfxText = 'CRUSH!';
     sfxVariant = 'heavy-landed';
   } else if (move === 'open') {
-    if (tactic === 'press') sfxText = 'POW!';
-    else if (tactic === 'steady') sfxText = 'WHACK!';
-    else sfxText = 'HOLD!';
+    if (tactic === 'press') {
+      sfxText = 'POW!';
+      sfxVariant = 'open-punished';
+    } else if (tactic === 'steady') {
+      sfxText = 'WHACK!';
+      sfxVariant = 'open-punished';
+    } else {
+      sfxText = 'HOLD!';
+    }
   } else {
     if (tactic === 'press') sfxText = 'SLASH!';
     else if (tactic === 'guard') sfxText = 'CLANK!';
@@ -49,6 +57,11 @@ export function deriveHitFeedback(
     sfxText,
     sfxVariant,
     shakePlayer: !reducedMotion && playerWasHit,
+    enemyHit,
+    playerHit: playerWasHit,
+    heavyBlocked,
+    openPunished,
+    reducedMotion,
     enemyLostPips,
     playerLostPips,
     bufferLostPips,

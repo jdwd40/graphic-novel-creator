@@ -125,4 +125,62 @@ describe('Hit feedback without numbers', () => {
     fireEvent.click(screen.getByTestId('combat-tap-zone'));
     expect(screen.getByRole('img', { name: 'Enemy health 4 of 8' })).toBeInTheDocument();
   });
+
+  it('distinguishes directional hits, open punishes, temporary variant swaps, and static reduced-motion cues (#56)', () => {
+    const enc: Encounter = {
+      ...makeEncounter('open'),
+      art: { enemyWounded: 'data:image/svg+xml,<svg>hurt</svg>' },
+    };
+    const start = { ...startFight(enc, makePlayer()), pendingOpen: true };
+    const punishStep = resolveBeat(start, enc, 'press');
+    const punishFb = deriveHitFeedback(start, punishStep.state, punishStep.events, 'press', false);
+
+    expect(punishFb.enemyHit).toBe(true);
+    expect(punishFb.playerHit).toBe(false);
+    expect(punishFb.openPunished).toBe(true);
+    expect(punishFb.sfxVariant).toBe('open-punished');
+
+    const { rerender } = render(
+      <CombatScreen
+        encounter={enc}
+        fightState={punishStep.state}
+        resultCaption="You punish the opening!"
+        feedback={punishFb}
+        onAdvanceBeat={() => {}}
+        onSelectTactic={() => {}}
+        onRetreat={() => {}}
+      />,
+    );
+
+    expect(screen.getByTestId('combat-art-stage')).toHaveClass('is-enemy-hit', 'is-open-punished');
+    expect(screen.getByTestId('combat-enemy-side')).toHaveClass('is-enemy-hit');
+    expect(screen.getByTestId('combat-player-side')).not.toHaveClass('is-player-hit');
+    expect(screen.getByAltText('Dummy')).toHaveAttribute('src', 'data:image/svg+xml,<svg>hurt</svg>');
+
+    // Under reduced motion, shakePlayer is false but playerHit still flags static cue without motion.
+    const heavyEnc = makeEncounter('heavy');
+    const heavyStart = startFight(heavyEnc, makePlayer());
+    const hitStep = resolveBeat(heavyStart, heavyEnc, 'steady');
+    const rmFb = deriveHitFeedback(heavyStart, hitStep.state, hitStep.events, 'steady', true);
+
+    expect(rmFb.shakePlayer).toBe(false);
+    expect(rmFb.playerHit).toBe(true);
+    expect(rmFb.reducedMotion).toBe(true);
+
+    rerender(
+      <CombatScreen
+        encounter={heavyEnc}
+        fightState={hitStep.state}
+        resultCaption="Blow lands!"
+        feedback={rmFb}
+        onAdvanceBeat={() => {}}
+        onSelectTactic={() => {}}
+        onRetreat={() => {}}
+      />,
+    );
+
+    expect(screen.getByTestId('combat-art-stage')).not.toHaveClass('is-shaking');
+    expect(screen.getByTestId('combat-art-stage')).toHaveClass('is-reduced-motion');
+    expect(screen.getByTestId('combat-player-side')).toHaveClass('is-player-hit', 'is-reduced-motion');
+  });
 });

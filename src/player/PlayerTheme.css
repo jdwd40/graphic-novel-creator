@@ -274,3 +274,52 @@
   font-size: 0.85rem;
   color: var(--color-ink-muted, #3f4856);
 }
+
+.story-notice-card {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--color-accent-bg, #fef3c7);
+  color: var(--color-ink, #141414);
+  border: var(--border-panel, 3px solid #141414);
+  border-radius: var(--radius-panel, 10px);
+  box-shadow: var(--shadow-panel, 4px 4px 0 #141414);
+  cursor: pointer;
+  font-family: var(--font-body, system-ui, sans-serif);
+}
+
+.story-notice-card--woundAdded {
+  background: #fee2e2;
+}
+
+.story-notice-card--itemLost {
+  background: #e2e8f0;
+}
+
+.story-notice-card__img {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 2px solid var(--color-ink, #141414);
+  flex-shrink: 0;
+}
+
+.story-notice-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.story-notice-card__sub {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.story-notice-card__hint {
+  font-size: 0.74rem;
+  color: var(--color-ink-muted, #3f4856);
+}

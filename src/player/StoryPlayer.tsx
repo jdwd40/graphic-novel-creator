@@ -31,6 +31,7 @@ import { useImageUrl } from '../story/useImageUrl';
 import { ChoiceList } from './ChoiceList';
 import { CombatScreen, type CombatFeedbackState } from './CombatScreen';
 import { EndOfFightPage } from './EndOfFightPage';
+import { NotificationCard } from './NotificationCard';
 import { ReaderHud } from './ReaderHud';
 import { SatchelSheet } from './SatchelSheet';
 import { deriveHitFeedback } from './hitFeedback';
@@ -160,12 +161,26 @@ export function StoryPlayer({
     updatePlaythrough(fresh);
   };
 
+  const handleDismissNotificationCard = () => {
+    const cards = playthrough.notificationCards ?? [];
+    if (cards.length === 0) return;
+    updatePlaythrough({
+      ...playthrough,
+      notificationCards: cards.slice(1),
+      notifications: cards.length <= 1 ? [] : playthrough.notifications,
+    });
+  };
+
   const handlePassageChoice = (choiceId: string) => {
     if (!currentNode || currentNode.kind !== 'passage') return;
     const choice = currentNode.choices.find((c) => c.id === choiceId);
     if (!choice) return;
 
-    let next = playthrough;
+    let next: PlaythroughState = {
+      ...playthrough,
+      notifications: [],
+      notificationCards: [],
+    };
     if (choice.effects && choice.effects.length > 0) {
       next = applyStoryEffects(next, story, choice.effects);
     }
@@ -178,7 +193,14 @@ export function StoryPlayer({
 
     const targetNode = story.nodes[choice.targetNodeId];
     if (targetNode.kind === 'passage' && targetNode.effects && targetNode.effects.length > 0) {
-      next = applyStoryEffects(next, story, targetNode.effects);
+      const targetApplied = applyStoryEffects(next, story, targetNode.effects);
+      next = {
+        ...targetApplied,
+        notificationCards: [
+          ...(next.notificationCards ?? []),
+          ...(targetApplied.notificationCards ?? []),
+        ],
+      };
     }
 
     setUnwiredNotice(null);
@@ -453,10 +475,11 @@ export function StoryPlayer({
         />
       )}
 
-      {playthrough.notifications.length > 0 && (
-        <div className="combat-tell-box" role="status" data-testid="player-notifications">
-          {playthrough.notifications.join(' | ')}
-        </div>
+      {(playthrough.notificationCards?.length ?? 0) > 0 && (
+        <NotificationCard
+          cards={playthrough.notificationCards ?? []}
+          onDismiss={handleDismissNotificationCard}
+        />
       )}
 
       {unwiredNotice ? (

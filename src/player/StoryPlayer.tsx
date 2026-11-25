@@ -33,6 +33,7 @@ import { CombatScreen, type CombatFeedbackState } from './CombatScreen';
 import { EndOfFightPage } from './EndOfFightPage';
 import { ReaderHud } from './ReaderHud';
 import { deriveHitFeedback } from './hitFeedback';
+import './PlayerTheme.css';
 
 export interface StoryPlayerProps {
   story: Story;
@@ -544,15 +545,19 @@ function PassageView({
   const resolvedImage = useImageUrl(node.image);
 
   return (
-    <article className="combat-screen" data-testid={`passage-view-${node.id}`}>
-      {resolvedImage && (
-        <div className="combat-art-stage">
-          <img src={resolvedImage} alt={node.title} className="combat-art-img" />
+    <article className="passage-page" data-testid={`passage-view-${node.id}`}>
+      {resolvedImage ? (
+        <div className="passage-page__art-stage" data-testid="passage-art-stage">
+          <img src={resolvedImage} alt={node.title} className="passage-page__art-img" />
+        </div>
+      ) : (
+        <div className="passage-page__no-art-banner" data-testid="passage-no-art-banner">
+          <h2 className="passage-page__display-title">{node.title}</h2>
         </div>
       )}
-      <div className="story-caption-box">
-        <h2 style={{ margin: '0 0 0.4rem', fontSize: '1.1rem' }}>{node.title}</h2>
-        <p style={{ margin: 0 }}>{node.text}</p>
+      <div className="passage-page__caption" data-testid="passage-caption-panel">
+        {resolvedImage && <h2 className="passage-page__display-title">{node.title}</h2>}
+        <p>{node.text}</p>
       </div>
       {!node.isEnding && visibleChoices.length > 0 ? (
         <ChoiceList choices={visibleChoices} onSelect={onChoice} />

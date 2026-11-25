@@ -1,0 +1,16 @@
+:root {
+  --font-display: 'Bangers', Impact, 'Arial Narrow', sans-serif;
+  --font-body: 'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif;
+  --color-paper: #f6f0e2;
+  --color-panel: #ffffff;
+  --color-ink: #141414;
+  --color-ink-muted: #3f4856;
+  --color-accent: #b45309;
+  --color-accent-bg: #fef3c7;
+  --color-choice-bg: #ffffff;
+  --color-choice-active: #fde68a;
+  --color-danger: #b91c1c;
+  --border-panel: 3px solid #141414;
+  --shadow-panel: 4px 4px 0 #141414;
+  --radius-panel: 10px;
+}

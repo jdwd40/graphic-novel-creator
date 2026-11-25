@@ -8,10 +8,47 @@ export function makePanelArt(
   bgTop: string,
   bgBottom: string,
   accent: string,
-  silhouette: 'guard' | 'brute' | 'bell' | 'armory' | 'shrine' | 'open' | 'wounded',
+  silhouette:
+    | 'guard'
+    | 'brute'
+    | 'bell'
+    | 'armory'
+    | 'shrine'
+    | 'open'
+    | 'wounded'
+    | 'courtyard'
+    | 'dawn'
+    | 'cell'
+    | 'alley',
 ): string {
   const figure = (() => {
     switch (silhouette) {
+      case 'courtyard':
+        return `
+          <path d="M95 154 L95 72 L135 72 L135 154 M225 154 L225 72 L265 72 L265 154" fill="#1e293b" stroke="${accent}" stroke-width="3"/>
+          <path d="M135 154 L135 88 Q180 42 225 88 L225 154" fill="none" stroke="${accent}" stroke-width="4"/>
+          <path d="M168 38 L192 38 L196 68 L164 68 Z" fill="#0f172a" stroke="${accent}" stroke-width="2.5"/>
+          <path d="M60 40 L72 60 M110 24 L122 44 M248 28 L260 48 M295 45 L307 65" stroke="#94a3b8" stroke-width="2" opacity="0.6"/>
+        `;
+      case 'dawn':
+        return `
+          <circle cx="180" cy="128" r="38" fill="${accent}" opacity="0.85"/>
+          <path d="M115 154 L145 58 L215 58 L245 154 Z" fill="#1e1b4b" opacity="0.7" stroke="${accent}" stroke-width="3"/>
+          <path d="M60 120 L120 120 M240 120 L300 120 M180 40 L180 20" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>
+        `;
+      case 'cell':
+        return `
+          <rect x="130" y="38" width="100" height="72" rx="4" fill="#0f172a" stroke="${accent}" stroke-width="3"/>
+          <path d="M155 38 L155 110 M180 38 L180 110 M205 38 L205 110 M130 74 L230 74" stroke="#94a3b8" stroke-width="3"/>
+          <path d="M100 154 L260 154" stroke="${accent}" stroke-width="3"/>
+        `;
+      case 'alley':
+        return `
+          <path d="M40 24 L140 58 L140 154 L40 154 Z" fill="#0f172a" stroke="${accent}" stroke-width="2.5"/>
+          <path d="M320 24 L220 58 L220 154 L320 154 Z" fill="#0f172a" stroke="${accent}" stroke-width="2.5"/>
+          <circle cx="180" cy="84" r="10" fill="${accent}" opacity="0.8"/>
+          <path d="M70 32 L58 54 M195 22 L183 44 M285 36 L273 58" stroke="#64748b" stroke-width="2" opacity="0.7"/>
+        `;
       case 'guard':
         return `
           <path d="M180 62 L205 88 L195 155 L165 155 L155 88 Z" fill="#1b1f2a" stroke="${accent}" stroke-width="3"/>
@@ -128,6 +165,15 @@ export const ART_BELLWARDEN_P2 = makePanelArt(
   'wounded',
 );
 
+export const ART_COURTYARD = makePanelArt(
+  'The Courtyard Gate',
+  'Rainy Approach',
+  '#1e293b',
+  '#090d16',
+  '#60a5fa',
+  'courtyard',
+);
+
 export const ART_ARMORY = makePanelArt(
   'Watch Armory',
   'Quartermaster',
@@ -144,4 +190,31 @@ export const ART_SHRINE = makePanelArt(
   '#0f172a',
   '#2dd4bf',
   'shrine',
+);
+
+export const ART_BELFRY_DAWN = makePanelArt(
+  'Dawn Over the Belfry',
+  'Victory',
+  '#7c2d12',
+  '#1e1b4b',
+  '#fbbf24',
+  'dawn',
+);
+
+export const ART_CELL = makePanelArt(
+  'Guardhouse Cell',
+  'Locked Down',
+  '#1f2937',
+  '#09090b',
+  '#94a3b8',
+  'cell',
+);
+
+export const ART_ALLEY = makePanelArt(
+  'Rain-Slick Alley',
+  'Retreat',
+  '#172554',
+  '#09090b',
+  '#38bdf8',
+  'alley',
 );

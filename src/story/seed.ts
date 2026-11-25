@@ -1,11 +1,15 @@
 import { BEHAVIOUR_PRESETS, GEAR_TIERS, TOUGHNESS_PRESETS } from '../combat/constants';
 import {
+  ART_ALLEY,
   ART_ARMORY,
+  ART_BELFRY_DAWN,
   ART_BELLWARDEN,
   ART_BELLWARDEN_P2,
   ART_BRUTE,
   ART_BRUTE_OPEN,
   ART_BRUTE_WOUNDED,
+  ART_CELL,
+  ART_COURTYARD,
   ART_GATEHOUSE,
   ART_SHRINE,
 } from './artwork';
@@ -53,7 +57,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'The Courtyard Gate',
         text: 'Rain hammers the cobblestones below the Iron Bell tower. Beyond the unlocked armory hatch, a lantern swings in the gatehouse.',
-        image: ART_ARMORY,
+        image: ART_COURTYARD,
         position: { x: 60, y: 120 },
         choices: [
           {
@@ -243,7 +247,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'Dawn Over the Belfry',
         text: 'The Iron Bell falls silent. Daylight breaks across the valley below.',
-        image: ART_SHRINE,
+        image: ART_BELFRY_DAWN,
         position: { x: 1890, y: 40 },
         isEnding: true,
         choices: [],
@@ -253,7 +257,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'The Guardhouse Cell',
         text: 'You wake on cold flagstones, battered but alive. The story is not over yet.',
-        image: ART_ARMORY,
+        image: ART_CELL,
         position: { x: 960, y: 310 },
         choices: [
           {
@@ -268,7 +272,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'Rain-Slick Alley',
         text: 'You fall back into the alley to catch your breath before deciding whether to try again.',
-        image: ART_ARMORY,
+        image: ART_ALLEY,
         position: { x: 960, y: 470 },
         choices: [
           {

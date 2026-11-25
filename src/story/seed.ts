@@ -9,6 +9,7 @@ export function createSeedStory(): Story {
     title: 'The Iron Bell',
     schemaVersion: 2,
     coverImage: SEED_IMAGE_IDS.cover,
+    playerPortrait: SEED_IMAGE_IDS.playerPortrait,
     blurb:
       'Rain batters the ancient belfry. Take up watchman steel, read every foe, and silence the Iron Bell before dawn.',
     startNodeId: 'passage_intro',

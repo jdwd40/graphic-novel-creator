@@ -46,6 +46,14 @@ export function StorySettingsPanel({ story, onUpdateStory }: StorySettingsPanelP
         onChange={(coverImage) => onUpdateStory({ ...story, coverImage })}
         testId="story-cover-image-picker"
       />
+
+      <ImagePicker
+        label="Player portrait"
+        value={story.playerPortrait}
+        story={story}
+        onChange={(playerPortrait) => onUpdateStory({ ...story, playerPortrait })}
+        testId="story-player-portrait-picker"
+      />
     </section>
   );
 }

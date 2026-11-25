@@ -594,6 +594,7 @@ export function StoryPlayer({
           <CombatScreen
             encounter={currentNode.encounter}
             fightState={playthrough.activeFight.fight}
+            playerPortrait={story.playerPortrait}
             storyState={{
               flags: playthrough.flags,
               items: playthrough.items,

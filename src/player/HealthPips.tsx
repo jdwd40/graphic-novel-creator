@@ -31,30 +31,46 @@ export function HealthPips({
       aria-label={ariaLabel}
       data-testid={`pip-row-${variant}`}
     >
-      {maxBuffer > 0 &&
-        Array.from({ length: maxBuffer }, (_, idx) => {
-          const filled = idx < buffer;
-          const justLost = !filled && idx >= buffer && idx < buffer + bufferLostCount;
+      {maxBuffer > 0 && (
+        <div className="pip-group pip-group--buffer">
+          {Array.from({ length: maxBuffer }, (_, idx) => {
+            const filled = idx < buffer;
+            const justLost = !filled && idx >= buffer && idx < buffer + bufferLostCount;
+            return (
+              <span
+                key={`buf-${idx}`}
+                aria-hidden="true"
+                data-pip-shape="shield"
+                className={`pip pip--buffer ${filled ? 'is-filled' : 'is-empty'} ${justLost ? 'is-breaking' : ''}`}
+              >
+                <svg viewBox="0 0 16 16" className="pip-shield-svg" aria-hidden="true">
+                  <path
+                    d="M8 1.2L13.8 3.6V8.1C13.8 11.4 11.3 13.8 8 14.8C4.7 13.8 2.2 11.4 2.2 8.1V3.6L8 1.2Z"
+                    fill={filled ? '#38bdf8' : 'none'}
+                    stroke="#38bdf8"
+                    strokeWidth="1.6"
+                  />
+                </svg>
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="pip-group pip-group--health">
+        {Array.from({ length: max }, (_, idx) => {
+          const filled = idx < current;
+          const justLost = !filled && idx >= current && idx < current + lostCount;
           return (
             <span
-              key={`buf-${idx}`}
+              key={`hp-${idx}`}
               aria-hidden="true"
-              className={`pip pip--buffer ${filled ? 'is-filled' : 'is-empty'} ${justLost ? 'is-breaking' : ''}`}
+              data-pip-shape="circle"
+              className={`pip pip--${variant} ${filled ? 'is-filled' : 'is-empty'} ${justLost ? 'is-breaking' : ''}`}
             />
           );
         })}
-
-      {Array.from({ length: max }, (_, idx) => {
-        const filled = idx < current;
-        const justLost = !filled && idx >= current && idx < current + lostCount;
-        return (
-          <span
-            key={`hp-${idx}`}
-            aria-hidden="true"
-            className={`pip pip--${variant} ${filled ? 'is-filled' : 'is-empty'} ${justLost ? 'is-breaking' : ''}`}
-          />
-        );
-      })}
+      </div>
     </div>
   );
 }

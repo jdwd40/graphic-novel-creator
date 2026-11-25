@@ -260,8 +260,18 @@ export const ART_COVER = makePanelArt(
   'bell',
 );
 
+export const ART_PLAYER_PORTRAIT = encodeSvg(`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Player Portrait">
+    <rect width="96" height="96" rx="12" fill="#1e293b"/>
+    <path d="M18 96 L28 58 Q48 48 68 58 L78 96 Z" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/>
+    <circle cx="48" cy="36" r="16" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/>
+    <path d="M32 30 Q48 16 64 30" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round"/>
+  </svg>
+`);
+
 export const SEED_IMAGE_IDS = {
   cover: 'img_seed_cover',
+  playerPortrait: 'img_seed_player_portrait',
   courtyard: 'img_seed_courtyard',
   armory: 'img_seed_armory',
   shrine: 'img_seed_shrine',
@@ -283,6 +293,7 @@ export const SEED_IMAGE_IDS = {
 
 const SEED_ART_ENTRIES: ReadonlyArray<{ id: string; name: string; dataUrl: string }> = [
   { id: SEED_IMAGE_IDS.cover, name: 'The Iron Bell Cover.svg', dataUrl: ART_COVER },
+  { id: SEED_IMAGE_IDS.playerPortrait, name: 'Traveller Portrait.svg', dataUrl: ART_PLAYER_PORTRAIT },
   { id: SEED_IMAGE_IDS.courtyard, name: 'The Courtyard Gate.svg', dataUrl: ART_COURTYARD },
   { id: SEED_IMAGE_IDS.armory, name: 'Watch Armory.svg', dataUrl: ART_ARMORY },
   { id: SEED_IMAGE_IDS.shrine, name: 'Lantern Shrine.svg', dataUrl: ART_SHRINE },

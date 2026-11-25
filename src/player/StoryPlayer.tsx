@@ -400,16 +400,29 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     });
   };
 
-  const effectiveMax = getEffectiveMaxHealth(playthrough.combat);
+  const liveFight =
+    currentNode?.kind === 'encounter' &&
+    playthrough.activeFight?.encounterId === currentNode.id
+      ? playthrough.activeFight.fight
+      : null;
+  const displayedHealth = liveFight
+    ? liveFight.playerHealth
+    : playthrough.combat.health;
+  const effectiveMax = liveFight
+    ? liveFight.playerMaxHealth
+    : getEffectiveMaxHealth(playthrough.combat);
+  const displayedArmour = liveFight
+    ? liveFight.playerBuffer
+    : getArmourBuffer(playthrough.combat);
 
   return (
     <div className="player-shell" data-testid="story-player">
       <div className="player-status-bar">
         <span data-testid="player-hp-summary">
-          Health: {playthrough.combat.health}/{effectiveMax}
+          Health: {displayedHealth}/{effectiveMax}
         </span>
         <span>Weapon: {getWeaponDamage(playthrough.combat)} dmg</span>
-        <span>Armour: {getArmourBuffer(playthrough.combat)} buf</span>
+        <span data-testid="player-armour-summary">Armour: {displayedArmour} buf</span>
         <label className="auto-advance-toggle">
           <input
             type="checkbox"

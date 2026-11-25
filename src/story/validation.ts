@@ -87,6 +87,33 @@ function validateEncounterNode(node: EncounterNode, story: Story): ValidationMes
     }
   }
 
+  (encounter.moments ?? []).forEach((moment, idx) => {
+    if (moment.choices.length < 2) {
+      messages.push({
+        id: `${node.id}:moment-${idx}-choices`,
+        nodeId: node.id,
+        severity: 'error',
+        message: `${label}: Moment ${idx + 1} must have at least two choices.`,
+      });
+    }
+    moment.choices.forEach((choice, cIdx) => {
+      if (choice.then === 'exit') {
+        const hasExit =
+          Boolean(choice.exit) &&
+          Object.prototype.hasOwnProperty.call(encounter.exits, choice.exit!) &&
+          (choice.exit !== 'retreat' || encounter.allowRetreat);
+        if (!hasExit) {
+          messages.push({
+            id: `${node.id}:moment-${idx}-choice-${cIdx}-missing-exit`,
+            nodeId: node.id,
+            severity: 'error',
+            message: `${label}: Moment ${idx + 1} choice "${choice.label}" references missing exit "${choice.exit ?? ''}".`,
+          });
+        }
+      }
+    });
+  });
+
   return messages;
 }
 

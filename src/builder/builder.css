@@ -359,6 +359,37 @@
   font-weight: 700;
 }
 
+.story-integration-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.integration-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.integration-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.preview-modifier-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
 @media (max-width: 900px) {
   .builder-layout {
     grid-template-columns: 1fr;

@@ -1,8 +1,41 @@
+import { useState } from 'react';
+import { EMPTY_STORY_STATE } from '../combat/conditions';
 import { simulateAcrossTiers, type SimulationResult } from '../combat/simulator';
-import type { Encounter } from '../combat/types';
+import type { Condition, Encounter, StoryStateSnapshot } from '../combat/types';
 
 export interface BalancePreviewPanelProps {
   encounter: Encounter;
+}
+
+function describeCondition(cond: Condition): string {
+  if ('flag' in cond) return `Flag: ${cond.flag}`;
+  if ('item' in cond) return `Item: ${cond.item}`;
+  return `Stat: ${cond.stat} ${cond.op} ${cond.value}`;
+}
+
+function buildPreviewStoryState(
+  encounter: Encounter,
+  enabledIndices: Set<number>,
+): StoryStateSnapshot {
+  const flags: Record<string, boolean> = {};
+  const items: string[] = [];
+  const stats: Record<string, number> = {};
+
+  (encounter.modifiers ?? []).forEach((mod, idx) => {
+    if (!enabledIndices.has(idx)) return;
+    if ('flag' in mod.if) {
+      flags[mod.if.flag] = true;
+    } else if ('item' in mod.if && !items.includes(mod.if.item)) {
+      items.push(mod.if.item);
+    } else if ('stat' in mod.if) {
+      if (mod.if.op === 'gt') stats[mod.if.stat] = mod.if.value + 1;
+      else if (mod.if.op === 'lt') stats[mod.if.stat] = mod.if.value - 1;
+      else if (mod.if.op === 'neq') stats[mod.if.stat] = mod.if.value + 1;
+      else stats[mod.if.stat] = mod.if.value;
+    }
+  });
+
+  return { flags, items, stats };
 }
 
 export function formatSimulationResult(result: SimulationResult): string {
@@ -19,8 +52,11 @@ export function formatSimulationResult(result: SimulationResult): string {
   return `Stalled after ${result.beats} beats`;
 }
 
-export function computeBalanceWarnings(encounter: Encounter): string[] {
-  const rows = simulateAcrossTiers(encounter);
+export function computeBalanceWarnings(
+  encounter: Encounter,
+  storyState: StoryStateSnapshot = EMPTY_STORY_STATE,
+): string[] {
+  const rows = simulateAcrossTiers(encounter, undefined, { storyState });
   const warnings: string[] = [];
 
   if (rows.every((r) => r.autopilot.outcome === 'defeat')) {
@@ -41,12 +77,42 @@ export function computeBalanceWarnings(encounter: Encounter): string[] {
 }
 
 export function BalancePreviewPanel({ encounter }: BalancePreviewPanelProps) {
-  const rows = simulateAcrossTiers(encounter);
-  const warnings = computeBalanceWarnings(encounter);
+  const [enabledModifiers, setEnabledModifiers] = useState<Set<number>>(() => new Set());
+  const modifiers = encounter.modifiers ?? [];
+  const storyState = buildPreviewStoryState(encounter, enabledModifiers);
+  const rows = simulateAcrossTiers(encounter, undefined, { storyState });
+  const warnings = computeBalanceWarnings(encounter, storyState);
+
+  const toggleModifier = (idx: number, checked: boolean) => {
+    setEnabledModifiers((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(idx);
+      else next.delete(idx);
+      return next;
+    });
+  };
 
   return (
     <section aria-label="Balance preview" className="balance-preview-panel">
       <h3>Balance Preview</h3>
+
+      {modifiers.length > 0 && (
+        <div className="preview-modifier-toggles" aria-label="Preview modifiers">
+          {modifiers.map((mod, idx) => (
+            <label key={`prev-mod-${idx}`} className="inspector-checkbox">
+              <input
+                type="checkbox"
+                checked={enabledModifiers.has(idx)}
+                onChange={(e) => toggleModifier(idx, e.target.checked)}
+              />
+              <span>
+                {describeCondition(mod.if)} → {mod.effect}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
+
       <table className="balance-preview-table">
         <caption className="sr-only">
           Simulated fight outcomes across gear tiers for Autopilot and Careful readers

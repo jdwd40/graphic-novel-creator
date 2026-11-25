@@ -9,6 +9,7 @@ import type {
 } from '../combat/types';
 import type { EncounterNode } from '../story/types';
 import { BalancePreviewPanel } from './BalancePreviewPanel';
+import { BossEditor } from './BossEditor';
 import { CaptionEditor } from './CaptionEditor';
 import { StoryIntegrationEditor } from './StoryIntegrationEditor';
 
@@ -291,6 +292,8 @@ export function EncounterInspector({ node, onUpdate }: EncounterInspectorProps) 
       <CaptionEditor encounter={encounter} onUpdate={onUpdate} />
 
       <StoryIntegrationEditor encounter={encounter} onUpdate={onUpdate} />
+
+      <BossEditor encounter={encounter} onUpdate={onUpdate} />
 
       <BalancePreviewPanel encounter={encounter} />
     </div>

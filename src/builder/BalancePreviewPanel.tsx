@@ -38,18 +38,25 @@ function buildPreviewStoryState(
   return { flags, items, stats };
 }
 
-export function formatSimulationResult(result: SimulationResult): string {
+export function formatSimulationResult(
+  result: SimulationResult,
+  showPhases = false,
+): string {
+  const phaseNote =
+    showPhases && result.beatsPerPhase.length > 1
+      ? ` (phases: ${result.beatsPerPhase.join(' / ')})`
+      : '';
   if (result.outcome === 'victory') {
     const beatWord = result.beats === 1 ? 'beat' : 'beats';
     if (result.healthLost === 0) {
-      return `Wins in ${result.beats} ${beatWord}, no health lost`;
+      return `Wins in ${result.beats} ${beatWord}, no health lost${phaseNote}`;
     }
-    return `Wins in ${result.beats} ${beatWord}, loses ${result.healthLost} health`;
+    return `Wins in ${result.beats} ${beatWord}, loses ${result.healthLost} health${phaseNote}`;
   }
   if (result.outcome === 'defeat') {
-    return `Defeated on beat ${result.beats}`;
+    return `Defeated on beat ${result.beats}${phaseNote}`;
   }
-  return `Stalled after ${result.beats} beats`;
+  return `Stalled after ${result.beats} beats${phaseNote}`;
 }
 
 export function computeBalanceWarnings(
@@ -82,6 +89,7 @@ export function BalancePreviewPanel({ encounter }: BalancePreviewPanelProps) {
   const storyState = buildPreviewStoryState(encounter, enabledModifiers);
   const rows = simulateAcrossTiers(encounter, undefined, { storyState });
   const warnings = computeBalanceWarnings(encounter, storyState);
+  const showPhases = (encounter.phases?.length ?? 0) > 0;
 
   const toggleModifier = (idx: number, checked: boolean) => {
     setEnabledModifiers((prev) => {
@@ -130,8 +138,8 @@ export function BalancePreviewPanel({ encounter }: BalancePreviewPanelProps) {
               <th scope="row">
                 Tier {row.tier} ({row.weaponName} / {row.armourName})
               </th>
-              <td>{formatSimulationResult(row.autopilot)}</td>
-              <td>{formatSimulationResult(row.careful)}</td>
+              <td>{formatSimulationResult(row.autopilot, showPhases)}</td>
+              <td>{formatSimulationResult(row.careful, showPhases)}</td>
             </tr>
           ))}
         </tbody>

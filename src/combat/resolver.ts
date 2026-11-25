@@ -304,11 +304,38 @@ export function advanceBeat(
     status = 'finished';
     exitKey = 'defeat';
   } else {
-    const due = collectDueMoments(resolved, encounter, []);
+    const phases = encounter.phases ?? [];
+    const enteredPhases: number[] = [];
+    if (phases.length > 0) {
+      const sorted = phases
+        .map((p, idx) => ({ phaseNum: idx + 1, ...p }))
+        .sort((a, b) => b.healthAtMost - a.healthAtMost);
+      for (const p of sorted) {
+        if (p.phaseNum > nextState.phase && nextState.enemyHealth <= p.healthAtMost) {
+          enteredPhases.push(p.phaseNum);
+        }
+      }
+      if (enteredPhases.length > 0) {
+        const latestPhaseNum = enteredPhases[enteredPhases.length - 1];
+        const latestPhase = phases[latestPhaseNum - 1];
+        nextState = {
+          ...nextState,
+          phase: latestPhaseNum,
+          activePattern:
+            latestPhase && latestPhase.pattern.length > 0
+              ? [...latestPhase.pattern]
+              : nextState.activePattern,
+          patternIndex: 0,
+        };
+        events.push({ type: 'phaseChanged', phase: latestPhaseNum });
+      }
+    }
+
+    const due = collectDueMoments(nextState, encounter, enteredPhases);
     if (due.events.length > 0) {
       events.push(...due.events);
       nextState = {
-        ...resolved,
+        ...nextState,
         firedMoments: due.firedMoments,
         pendingMomentQueue: due.pendingMomentQueue,
       };

@@ -82,7 +82,9 @@ export function CombatScreen({
   const availableMomentChoices = activeMoment
     ? getAvailableMomentChoices(fightState, encounter, storyState)
     : [];
-  const imageSource = artSrc ?? encounter.enemy.image;
+  const phaseArt =
+    fightState.phase > 0 ? encounter.phases?.[fightState.phase - 1]?.image : undefined;
+  const imageSource = artSrc ?? (phaseArt && phaseArt.trim() !== '' ? phaseArt : encounter.enemy.image);
 
   return (
     <section

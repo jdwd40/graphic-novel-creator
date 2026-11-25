@@ -36,10 +36,9 @@ const nodeTypes = {
 export interface StoryMapBuilderProps {
   story: Story;
   onStoryChange: (nextStory: Story) => void;
-  onResetSeed?: () => void;
 }
 
-function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProps) {
+function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(story.startNodeId);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -239,11 +238,6 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
           >
             {sideTab === 'images' ? 'Inspector' : 'Images'}
           </button>
-          {onResetSeed && (
-            <button type="button" onClick={onResetSeed}>
-              Reset demo story
-            </button>
-          )}
         </div>
 
         {saveError && (

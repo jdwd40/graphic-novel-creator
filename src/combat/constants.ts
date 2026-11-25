@@ -10,7 +10,7 @@ export const TOUGHNESS_PRESETS: Record<ToughnessPreset, ToughnessConfig> = {
   weak: { health: 5, hit: 1, tellClarity: 'clear' },
   standard: { health: 8, hit: 1, tellClarity: 'clear' },
   tough: { health: 12, hit: 2, tellClarity: 'vague' },
-  boss: { health: 16, hit: 2, tellClarity: 'vague' },
+  boss: { health: 24, hit: 2, tellClarity: 'vague' },
 };
 
 export const BEHAVIOUR_PRESETS: Record<Exclude<BehaviourPreset, 'custom'>, Move[]> = {

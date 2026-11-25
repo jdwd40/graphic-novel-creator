@@ -90,7 +90,7 @@ An enemy is a toughness preset plus a short authored loop of moves. There is no 
 | Weak | 5 | 1 | Clear |
 | Standard | 8 | 1 | Clear |
 | Tough | 12 | 2 | Vague |
-| Boss | 16, split across phases | 2 | Vague |
+| Boss | 24, split across phases | 2 | Vague |
 
 | Behaviour preset | Pattern, repeated | Feel |
 | --- | --- | --- |
@@ -125,7 +125,7 @@ Bosses use the same rules and feel different through structure, not new stats:
 - **One rule-break.** A boss may break exactly one rule from a short list: a Heavy that cannot be blocked without a named item, tells that stay hidden until a flag is set, or health that cannot drop below a threshold until a moment resolves.
 - **Other ways to win.** A fight can end on "survive N beats" or on reaching a moment, instead of on zero health.
 
-A boss should run 8 to 12 beats in total. The Boss numbers are a starting point and have not been simulated.
+A boss should run 8 to 12 beats in total. Simulations place the tuned Boss preset at 24 health and Hit 2 so a careful reader at tier 2 finishes in 8 to 9 beats.
 
 ## Story integration
 
@@ -214,6 +214,12 @@ A simulation of this spec's numbers gives the preview below. The target is that 
 | Standard Brawler | 1 | Wins in 4 beats, loses 2 health | Wins in 4 beats, no health lost |
 | Tough Brute | 1 | Defeated on beat 3 | Wins in 6 beats, loses 2 health |
 | Tough Brute | 2 | Wins in 4 beats, loses 4 health | Wins in 4 beats, no health lost |
+| Boss (2-phase) | 1 | Defeated on beat 3 | Defeated on beat 6 |
+| Boss (2-phase) | 2 | Defeated on beat 4 | Wins in 8 beats, loses 2 health |
+| Boss (2-phase) | 3 | Defeated on beat 5 | Wins in 7 beats, no health lost |
+| Boss (3-phase) | 1 | Defeated on beat 3 | Defeated on beat 8 |
+| Boss (3-phase) | 2 | Defeated on beat 4 | Wins in 9 beats, loses 2 health |
+| Boss (3-phase) | 3 | Defeated on beat 5 | Wins in 7 beats, no health lost |
 
 ## Data model
 
@@ -299,7 +305,7 @@ Six decisions are still open:
 - [x] **Confirmed (Issue #28):** Added a standard `rest` effect that restores health to current effective maximum (respecting wounds) plus a builder validation hint when a story has two or more encounters and no `rest` effect. Automatic recovery was avoided.
 - [x] **Confirmed (Issue #3):** Retreat costs one free enemy Strike (resolved as if on Steady); if that Strike takes the player to 0 health, the fight leaves by Defeat. Per-encounter pricing is deferred until creators ask for it.
 - [x] **Confirmed (Issue #17):** Ship exact pips for enemy health so readers can judge when Press is worth the risk. Revisit a described state as a future boss rule-break rather than a global setting.
-- [ ] Boss numbers and the three rule-breaks need a simulation pass before they are offered to creators.
+- [x] **Confirmed (Issue #33):** Simulated 2-phase and 3-phase bosses across tiers 1–3 and all rule-breaks; tuned the Boss preset to 24 health and Hit 2 so a careful reader at tier 2 wins in 8–9 beats while autopilot is defeated across all tiers.
 
 Suggested build order, each step usable on its own:
 

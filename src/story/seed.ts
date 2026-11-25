@@ -211,7 +211,7 @@ export function createSeedStory(): Story {
           tellClarity: 'clear',
           phases: [
             {
-              healthAtMost: 8,
+              healthAtMost: 12,
               pattern: ['strike', 'heavy'],
               image: ART_BELLWARDEN_P2,
             },

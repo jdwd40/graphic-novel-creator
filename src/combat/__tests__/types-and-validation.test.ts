@@ -100,7 +100,7 @@ describe('combat presets and validation', () => {
     expect(TOUGHNESS_PRESETS.weak).toEqual({ health: 5, hit: 1, tellClarity: 'clear' });
     expect(TOUGHNESS_PRESETS.standard).toEqual({ health: 8, hit: 1, tellClarity: 'clear' });
     expect(TOUGHNESS_PRESETS.tough).toEqual({ health: 12, hit: 2, tellClarity: 'vague' });
-    expect(TOUGHNESS_PRESETS.boss).toEqual({ health: 16, hit: 2, tellClarity: 'vague' });
+    expect(TOUGHNESS_PRESETS.boss).toEqual({ health: 24, hit: 2, tellClarity: 'vague' });
 
     expect(BEHAVIOUR_PRESETS.brawler).toEqual(['strike', 'strike', 'heavy']);
     expect(BEHAVIOUR_PRESETS.brute).toEqual(['strike', 'heavy']);

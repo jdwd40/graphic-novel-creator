@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { selectEncounterArt } from '../art';
@@ -89,15 +89,20 @@ describe('art variants', () => {
     expect(selectEncounterArt(enc, phaseState)).toBe('phase2.png');
   });
 
-  it('renders variant controls in inspector and swaps art inside fixed-stage CombatScreen', () => {
+  it('renders variant controls in inspector and swaps art inside fixed-stage CombatScreen', async () => {
     function EditorHarness() {
       const [enc, setEnc] = useState<Encounter>(createDefaultEncounterNode('e1').encounter);
-      return <ArtVariantsEditor encounter={enc} onUpdate={setEnc} />;
+      return <ArtVariantsEditor encounter={enc} storyId="art-test" onUpdate={setEnc} />;
     }
     render(<EditorHarness />);
     fireEvent.click(screen.getByText(/Art variants/i));
-    fireEvent.change(screen.getByLabelText('Enemy Open art'), { target: { value: 'new-open.png' } });
-    expect((screen.getByLabelText('Enemy Open art') as HTMLInputElement).value).toBe('new-open.png');
+    const file = new File(['<svg xmlns="http://www.w3.org/2000/svg"/>'], 'new-open.svg', {
+      type: 'image/svg+xml',
+    });
+    fireEvent.change(screen.getByLabelText('Upload Enemy Open art'), { target: { files: [file] } });
+    await waitFor(() => {
+      expect(screen.getByAltText('Enemy Open art preview')).toBeInTheDocument();
+    });
 
     const enc = makeEncounter(true);
     const state = { ...startFight(enc, makePlayer()), pendingOpen: true };

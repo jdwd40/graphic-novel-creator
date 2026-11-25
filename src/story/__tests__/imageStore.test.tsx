@@ -168,7 +168,7 @@ describe('external imageStore (#38)', () => {
     }
     render(<Harness />);
 
-    const input = screen.getByLabelText(/upload image file/i) as HTMLInputElement;
+    const input = screen.getByLabelText(/upload enemy image/i) as HTMLInputElement;
     const file = new File(['<svg/>'], 'fail.svg', { type: 'image/svg+xml' });
     fireEvent.change(input, { target: { files: [file] } });
 

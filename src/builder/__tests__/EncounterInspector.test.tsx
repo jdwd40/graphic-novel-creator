@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { validateEncounterJson } from '../../combat/validation';
@@ -25,14 +25,21 @@ function InspectorHarness({ initial = createDefaultEncounterNode('enc_test').enc
 }
 
 describe('EncounterInspector', () => {
-  it('builds a valid encounter from the three required fields and updates live preview', () => {
+  it('builds a valid encounter from the three required fields and updates live preview', async () => {
     render(<InspectorHarness />);
 
     fireEvent.change(screen.getByLabelText(/enemy name/i), {
       target: { value: 'Iron Sentinel' },
     });
-    fireEvent.change(screen.getByLabelText(/enemy image/i), {
-      target: { value: 'sentinel.png' },
+    const file = new File(['<svg xmlns="http://www.w3.org/2000/svg"/>'], 'sentinel.svg', {
+      type: 'image/svg+xml',
+    });
+    fireEvent.change(screen.getByLabelText(/upload enemy image/i), {
+      target: { files: [file] },
+    });
+    await waitFor(() => {
+      const saved = JSON.parse(screen.getByTestId('stored-json').textContent!) as Encounter;
+      expect(saved.enemy.image).toMatch(/^img_/);
     });
     fireEvent.change(screen.getByLabelText(/toughness/i), {
       target: { value: 'tough' },

@@ -16,6 +16,7 @@ import type { Story, StoryNode } from '../story/types';
 import { validateStory } from '../story/validation';
 import { EncounterInspector } from './EncounterInspector';
 import { EncounterNodeCard } from './EncounterNodeCard';
+import { ImageLibraryPanel } from './ImageLibraryPanel';
 import { PassageInspector } from './PassageInspector';
 import { PassageNodeCard } from './PassageNodeCard';
 import { ValidationPanel } from './ValidationPanel';
@@ -42,6 +43,7 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(story.startNodeId);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [sideTab, setSideTab] = useState<'inspector' | 'images'>('inspector');
 
   const nodes = useMemo(() => storyToFlowNodes(story, selectedNodeId), [story, selectedNodeId]);
   const edges = useMemo(() => storyToFlowEdges(story), [story]);
@@ -230,6 +232,13 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
           >
             Delete selected
           </button>
+          <button
+            type="button"
+            aria-pressed={sideTab === 'images'}
+            onClick={() => setSideTab((t) => (t === 'images' ? 'inspector' : 'images'))}
+          >
+            {sideTab === 'images' ? 'Inspector' : 'Images'}
+          </button>
           {onResetSeed && (
             <button type="button" onClick={onResetSeed}>
               Reset demo story
@@ -261,7 +270,10 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
             onNodesChange={handleNodesChange}
             onConnect={handleConnect}
             onEdgesDelete={handleEdgesDelete}
-            onNodeClick={(_e, node: Node) => setSelectedNodeId(node.id)}
+            onNodeClick={(_e, node: Node) => {
+              setSelectedNodeId(node.id);
+              setSideTab('inspector');
+            }}
             onInit={setRfInstance}
             fitView
           >
@@ -274,7 +286,9 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
       </div>
 
       <aside className="inspector-pane" aria-label="Node inspector">
-        {selectedNode ? (
+        {sideTab === 'images' ? (
+          <ImageLibraryPanel story={story} />
+        ) : selectedNode ? (
           <>
             {rfInstance && (
               <button
@@ -286,7 +300,9 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
             )}
             {selectedNode.kind === 'encounter' ? (
               <EncounterInspector
+                key={selectedNode.id}
                 node={selectedNode}
+                story={story}
                 storyId={story.id}
                 onUpdate={(nextEncounter) => {
                   const nextExitTargets: Record<string, string | null> = {};
@@ -311,6 +327,7 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
               />
             ) : (
               <PassageInspector
+                key={selectedNode.id}
                 node={selectedNode}
                 onUpdate={(nextPassage) => {
                   commitStory({

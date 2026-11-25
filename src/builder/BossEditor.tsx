@@ -7,13 +7,17 @@ import type {
   Move,
   WinCondition,
 } from '../combat/types';
+import type { Story } from '../story/types';
+import { ImagePicker } from './ImagePicker';
 
 export interface BossEditorProps {
   encounter: Encounter;
+  story?: Story;
+  storyId?: string;
   onUpdate: (nextEncounter: Encounter) => void;
 }
 
-export function BossEditor({ encounter, onUpdate }: BossEditorProps) {
+export function BossEditor({ encounter, story, storyId, onUpdate }: BossEditorProps) {
   const [ruleBreakWarning, setRuleBreakWarning] = useState<string | null>(null);
   const phases = encounter.phases ?? [];
   const winCondition: WinCondition = encounter.winCondition ?? { type: 'enemyHealthZero' };
@@ -150,23 +154,18 @@ export function BossEditor({ encounter, onUpdate }: BossEditorProps) {
               </button>
             </div>
 
-            <div className="inspector-field">
-              <label htmlFor={`phase-image-${idx}`}>Phase {idx + 2} art (optional)</label>
-              <input
-                id={`phase-image-${idx}`}
-                type="text"
-                value={phase.image ?? ''}
-                onChange={(e) =>
-                  updatePhases(
-                    phases.map((p, i) =>
-                      i === idx
-                        ? { ...p, image: e.target.value || undefined }
-                        : p,
-                    ),
-                  )
-                }
-              />
-            </div>
+            <ImagePicker
+              label={`Phase ${idx + 2} art (optional)`}
+              value={phase.image}
+              story={story}
+              storyId={storyId}
+              onChange={(imageId) =>
+                updatePhases(
+                  phases.map((p, i) => (i === idx ? { ...p, image: imageId } : p)),
+                )
+              }
+              testId={`phase-image-picker-${idx}`}
+            />
           </div>
         ))}
 

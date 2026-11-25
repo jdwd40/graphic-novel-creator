@@ -1,6 +1,6 @@
 import type { Edge, Node } from '@xyflow/react';
 import { BEHAVIOUR_PRESETS, TOUGHNESS_PRESETS } from '../combat/constants';
-import { ART_GATEHOUSE } from '../story/artwork';
+import { ensureSeedArtworkRegistered, SEED_IMAGE_IDS } from '../story/artwork';
 import type { EncounterNode, PassageNode, Story } from '../story/types';
 import { getVisibleEncounterExitKeys } from './EncounterNodeCard';
 
@@ -65,6 +65,7 @@ export function createDefaultEncounterNode(
   id: string,
   position = { x: 240, y: 240 },
 ): EncounterNode {
+  ensureSeedArtworkRegistered();
   const standard = TOUGHNESS_PRESETS.standard;
   return {
     id,
@@ -75,7 +76,7 @@ export function createDefaultEncounterNode(
       type: 'encounter',
       enemy: {
         name: 'New Enemy',
-        image: ART_GATEHOUSE,
+        image: SEED_IMAGE_IDS.gatehouse,
         toughness: 'standard',
         health: standard.health,
         hit: standard.hit,

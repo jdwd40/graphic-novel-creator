@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+import type { ChangeEvent } from 'react';
 import { BEHAVIOUR_PRESETS, TOUGHNESS_PRESETS, VALID_MOVES } from '../combat/constants';
 import type {
   BehaviourPreset,
@@ -7,52 +7,35 @@ import type {
   TellClarity,
   ToughnessPreset,
 } from '../combat/types';
-import { saveImageFile } from '../story/imageStore';
-import type { EncounterNode } from '../story/types';
+import type { EncounterNode, Story } from '../story/types';
 import { ArtVariantsEditor } from './ArtVariantsEditor';
 import { BalancePreviewPanel } from './BalancePreviewPanel';
 import { BossEditor } from './BossEditor';
 import { CaptionEditor } from './CaptionEditor';
+import { ImagePicker } from './ImagePicker';
 import { StoryIntegrationEditor } from './StoryIntegrationEditor';
 
 export interface EncounterInspectorProps {
   node: EncounterNode;
+  story?: Story;
   storyId?: string;
   onUpdate: (nextEncounter: Encounter) => void;
 }
 
-export function EncounterInspector({ node, storyId, onUpdate }: EncounterInspectorProps) {
+export function EncounterInspector({
+  node,
+  story,
+  storyId,
+  onUpdate,
+}: EncounterInspectorProps) {
   const { encounter } = node;
-  const [imageError, setImageError] = useState<string | null>(null);
+  const effectiveStoryId = story?.id ?? storyId;
 
   const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     onUpdate({
       ...encounter,
       enemy: { ...encounter.enemy, name: e.target.value },
     });
-  };
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setImageError(null);
-    onUpdate({
-      ...encounter,
-      enemy: { ...encounter.enemy, image: e.target.value },
-    });
-  };
-
-  const handleImageFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageError(null);
-    try {
-      const saved = await saveImageFile(file, { storyId, name: file.name });
-      onUpdate({
-        ...encounter,
-        enemy: { ...encounter.enemy, image: saved.id },
-      });
-    } catch (err) {
-      setImageError(err instanceof Error ? err.message : 'Failed to save image.');
-    }
   };
 
   const handleToughnessChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -141,29 +124,19 @@ export function EncounterInspector({ node, storyId, onUpdate }: EncounterInspect
         />
       </div>
 
-      <div className="inspector-field">
-        <label htmlFor="enc-enemy-image">Enemy image</label>
-        <input
-          id="enc-enemy-image"
-          type="text"
-          value={encounter.enemy.image}
-          onChange={handleImageChange}
-        />
-        <label htmlFor="enc-enemy-image-upload" className="inspector-sublabel">
-          Upload image file
-        </label>
-        <input
-          id="enc-enemy-image-upload"
-          type="file"
-          accept="image/*"
-          onChange={handleImageFileUpload}
-        />
-        {imageError && (
-          <div role="alert" className="validation-error" style={{ color: '#b91c1c', marginTop: '0.25rem' }}>
-            {imageError}
-          </div>
-        )}
-      </div>
+      <ImagePicker
+        label="Enemy image"
+        value={encounter.enemy.image || undefined}
+        story={story}
+        storyId={effectiveStoryId}
+        onChange={(imageId) =>
+          onUpdate({
+            ...encounter,
+            enemy: { ...encounter.enemy, image: imageId ?? '' },
+          })
+        }
+        testId="enc-enemy-image-picker"
+      />
 
       <div className="inspector-field">
         <label htmlFor="enc-toughness">Toughness</label>
@@ -301,11 +274,21 @@ export function EncounterInspector({ node, storyId, onUpdate }: EncounterInspect
 
       <CaptionEditor encounter={encounter} onUpdate={onUpdate} />
 
-      <ArtVariantsEditor encounter={encounter} onUpdate={onUpdate} />
+      <ArtVariantsEditor
+        encounter={encounter}
+        story={story}
+        storyId={effectiveStoryId}
+        onUpdate={onUpdate}
+      />
 
       <StoryIntegrationEditor encounter={encounter} onUpdate={onUpdate} />
 
-      <BossEditor encounter={encounter} onUpdate={onUpdate} />
+      <BossEditor
+        encounter={encounter}
+        story={story}
+        storyId={effectiveStoryId}
+        onUpdate={onUpdate}
+      />
 
       <BalancePreviewPanel encounter={encounter} />
     </div>

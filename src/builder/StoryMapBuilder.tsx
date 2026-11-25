@@ -292,6 +292,8 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
               setSideTab('inspector');
             }}
             onInit={setRfInstance}
+            minZoom={0.35}
+            fitViewOptions={{ padding: 0.18, maxZoom: 1 }}
             fitView
           >
             <Background />

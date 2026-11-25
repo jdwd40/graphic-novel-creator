@@ -70,13 +70,22 @@
 }
 
 .story-node {
-  min-width: 220px;
+  min-width: 240px;
+  max-width: 270px;
   background: #ffffff;
   border: 2px solid #2b303a;
   border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+  padding: 0.55rem 0.75rem;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
+}
+
+.story-node--start {
+  border-top: 5px solid #16a34a;
+}
+
+.story-node--ending {
+  border-top: 5px solid #7e22ce;
 }
 
 .story-node.is-selected {
@@ -87,6 +96,16 @@
 .story-node--encounter {
   border-color: #9a3412;
   background: #fffaf5;
+}
+
+.story-node__passage-thumb {
+  width: 100%;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #cbd5e1;
+  margin-bottom: 0.35rem;
+  display: block;
 }
 
 .story-node__header {
@@ -138,8 +157,17 @@
 }
 
 .story-node__title {
-  font-weight: 700;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
   color: #0f172a;
+}
+
+.story-node .react-flow__handle {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  background: #1d4ed8;
 }
 
 .story-node__outputs {

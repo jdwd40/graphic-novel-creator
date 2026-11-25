@@ -2,6 +2,8 @@ import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import type { EncounterNode } from '../story/types';
 import { useImageUrl } from '../story/useImageUrl';
 
+const HANDLE_STYLE = { width: 16, height: 16 };
+
 export interface EncounterFlowData extends Record<string, unknown> {
   encounterNode: EncounterNode;
 }
@@ -33,7 +35,13 @@ export function EncounterNodeCard({ data, selected }: NodeProps<EncounterFlowNod
       className={`story-node story-node--encounter ${selected ? 'is-selected' : ''}`}
       data-testid={`encounter-node-${encounterNode.id}`}
     >
-      <Handle type="target" position={Position.Left} id="in" aria-label="Incoming story link" />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="in"
+        style={HANDLE_STYLE}
+        aria-label="Incoming story link"
+      />
       <div className="story-node__encounter-top">
         <img
           src={thumbSrc}
@@ -58,6 +66,7 @@ export function EncounterNodeCard({ data, selected }: NodeProps<EncounterFlowNod
                 type="source"
                 position={Position.Right}
                 id={exitKey}
+                style={HANDLE_STYLE}
                 data-handle-exit={exitKey}
                 aria-label={`${label} exit`}
               />

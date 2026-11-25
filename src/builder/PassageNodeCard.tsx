@@ -1,5 +1,8 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import type { PassageNode } from '../story/types';
+import { useImageUrl } from '../story/useImageUrl';
+
+const HANDLE_STYLE = { width: 16, height: 16 };
 
 export interface PassageFlowData extends Record<string, unknown> {
   passage: PassageNode;
@@ -11,17 +14,42 @@ export type PassageFlowNode = Node<PassageFlowData, 'passage'>;
 
 export function PassageNodeCard({ data, selected }: NodeProps<PassageFlowNode>) {
   const { passage, isStart } = data;
+  const thumbSrc = useImageUrl(passage.image);
+  const stateClasses = [
+    'story-node',
+    'story-node--passage',
+    selected ? 'is-selected' : '',
+    isStart ? 'story-node--start' : '',
+    passage.isEnding ? 'story-node--ending' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
-      className={`story-node story-node--passage ${selected ? 'is-selected' : ''}`}
+      className={stateClasses}
       data-testid={`passage-node-${passage.id}`}
     >
-      <Handle type="target" position={Position.Left} id="in" aria-label="Incoming story link" />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="in"
+        style={HANDLE_STYLE}
+        aria-label="Incoming story link"
+      />
       <div className="story-node__header">
         <span className="story-node__badge">Passage</span>
         {isStart && <span className="story-node__badge story-node__badge--start">Start</span>}
         {passage.isEnding && <span className="story-node__badge story-node__badge--end">Ending</span>}
       </div>
+      {thumbSrc && (
+        <img
+          src={thumbSrc}
+          alt={passage.title}
+          className="story-node__passage-thumb"
+          data-testid={`passage-thumb-${passage.id}`}
+        />
+      )}
       <div className="story-node__title">{passage.title}</div>
       <div className="story-node__outputs">
         {passage.choices.map((choice) => {
@@ -56,6 +84,7 @@ export function PassageNodeCard({ data, selected }: NodeProps<PassageFlowNode>) 
                 type="source"
                 position={Position.Right}
                 id={choice.id}
+                style={HANDLE_STYLE}
                 aria-label={`Choice ${choice.label}`}
               />
             </div>

@@ -1,6 +1,8 @@
+import { EMPTY_STORY_STATE, evaluateCondition } from './conditions';
 import { BARE_HANDS_DAMAGE, NO_ARMOUR_BUFFER } from './constants';
 import { selectLoopPattern } from './rng';
 import type {
+  AllyActionState,
   BeatEvent,
   Encounter,
   ExitKey,
@@ -8,12 +10,14 @@ import type {
   FightState,
   Move,
   PlayerCombatState,
+  StoryStateSnapshot,
   Tactic,
 } from './types';
 
 export interface StartFightOptions {
   playthroughId?: string;
   encounterId?: string;
+  storyState?: StoryStateSnapshot;
 }
 
 export interface ResolveBeatResult {
@@ -26,27 +30,84 @@ export function startFight(
   player: PlayerCombatState,
   options: StartFightOptions = {},
 ): FightState {
-  const playerBuffer = player.armour?.buffer ?? NO_ARMOUR_BUFFER;
+  const storyState = options.storyState ?? EMPTY_STORY_STATE;
+  let playerBuffer = player.armour?.buffer ?? NO_ARMOUR_BUFFER;
+  let playerMaxBuffer = playerBuffer;
   const playerWeaponDamage = player.weapon?.damage ?? BARE_HANDS_DAMAGE;
   const playthroughId = options.playthroughId ?? 'default-playthrough';
   const encounterId = options.encounterId ?? 'default-encounter';
-  const pattern = [...encounter.pattern];
+
+  let enemyHealth = encounter.enemy.health;
+  let enemyHit = encounter.enemy.hit;
+  let pattern = [...encounter.pattern];
   const altPattern = encounter.altPattern ? [...encounter.altPattern] : null;
-  const activePattern = selectLoopPattern(pattern, altPattern, playthroughId, encounterId, 0);
+  let patternSwapped = false;
+  let revealedTells = false;
+  const allyActions: AllyActionState[] = [];
+  const unlockedChoices: string[] = [];
+  const unlockedExits: string[] = [];
+
+  for (const mod of encounter.modifiers ?? []) {
+    if (!evaluateCondition(mod.if, storyState)) {
+      continue;
+    }
+    switch (mod.effect) {
+      case 'enemyHealth':
+        enemyHealth = Math.max(1, enemyHealth + mod.value);
+        break;
+      case 'enemyHit':
+        enemyHit = Math.max(0, enemyHit + mod.value);
+        break;
+      case 'revealTells':
+        revealedTells = true;
+        break;
+      case 'allyActs':
+        allyActions.push({
+          beat: mod.beat,
+          damage: mod.damage,
+          caption: mod.caption,
+        });
+        break;
+      case 'swapPattern':
+        if (mod.pattern.length > 0) {
+          pattern = [...mod.pattern];
+          patternSwapped = true;
+        }
+        break;
+      case 'bonusBuffer':
+        playerBuffer = Math.max(0, playerBuffer + mod.value);
+        playerMaxBuffer = Math.max(playerMaxBuffer, playerBuffer);
+        break;
+      case 'unlockChoice':
+        if (!unlockedChoices.includes(mod.choiceId)) {
+          unlockedChoices.push(mod.choiceId);
+        }
+        break;
+      case 'unlockExit':
+        if (!unlockedExits.includes(mod.exitKey)) {
+          unlockedExits.push(mod.exitKey);
+        }
+        break;
+    }
+  }
+
+  const activePattern = patternSwapped
+    ? [...pattern]
+    : selectLoopPattern(pattern, altPattern, playthroughId, encounterId, 0);
 
   return {
-    enemyHealth: encounter.enemy.health,
-    enemyMaxHealth: encounter.enemy.health,
-    enemyHit: encounter.enemy.hit,
+    enemyHealth,
+    enemyMaxHealth: enemyHealth,
+    enemyHit,
     playerHealth: player.health,
     playerMaxHealth: player.maxHealth,
     playerStartingHealth: player.health,
     playerBuffer,
-    playerMaxBuffer: playerBuffer,
+    playerMaxBuffer,
     playerWeaponDamage,
     beatNumber: 0,
     pattern,
-    altPattern,
+    altPattern: patternSwapped ? null : altPattern,
     activePattern,
     patternIndex: 0,
     loopCount: 0,
@@ -55,10 +116,10 @@ export function startFight(
     pendingOpen: false,
     firedMoments: [],
     pendingMomentQueue: [],
-    revealedTells: false,
-    allyActions: [],
-    unlockedChoices: [],
-    unlockedExits: [],
+    revealedTells,
+    allyActions,
+    unlockedChoices,
+    unlockedExits,
     releasedHealthFloor: false,
     playthroughId,
     encounterId,
@@ -302,6 +363,7 @@ export function resolveBeat(
   tactic: Tactic,
 ): ResolveBeatResult {
   const events: BeatEvent[] = [];
+  const nextBeatNumber = state.beatNumber + 1;
   const wasPendingOpen = state.pendingOpen;
   const movePlayed = getUpcomingMove(state);
   const { playerDamage, enemyDamage, setsPendingOpen, heavyBlocked } = computeCellOutcome(
@@ -311,12 +373,26 @@ export function resolveBeat(
     state.enemyHit,
   );
 
+  // Ally acts on the scheduled beat before the player's hit.
+  let enemyHealthAfterAlly = state.enemyHealth;
+  for (const ally of state.allyActions) {
+    if (ally.beat === nextBeatNumber && enemyHealthAfterAlly > 0) {
+      enemyHealthAfterAlly = Math.max(0, enemyHealthAfterAlly - ally.damage);
+      events.push({
+        type: 'allyActed',
+        amount: ally.damage,
+        caption: ally.caption,
+      });
+    }
+  }
+
   events.push({ type: 'enemyMove', move: movePlayed, tactic });
 
-  // Player's hit lands first.
-  const nextEnemyHealth = Math.max(0, state.enemyHealth - playerDamage);
-  if (playerDamage > 0) {
-    events.push({ type: 'playerHit', amount: playerDamage, move: movePlayed, tactic });
+  // Player's hit lands first (after ally hit).
+  const appliedPlayerDamage = enemyHealthAfterAlly > 0 ? playerDamage : 0;
+  const nextEnemyHealth = Math.max(0, enemyHealthAfterAlly - appliedPlayerDamage);
+  if (appliedPlayerDamage > 0) {
+    events.push({ type: 'playerHit', amount: appliedPlayerDamage, move: movePlayed, tactic });
   }
 
   let nextBuffer = state.playerBuffer;

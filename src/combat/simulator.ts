@@ -5,6 +5,7 @@ import type {
   FightState,
   Move,
   PlayerCombatState,
+  StoryStateSnapshot,
   Tactic,
 } from './types';
 
@@ -25,6 +26,7 @@ export interface SimulationOptions {
   playerHealth?: number;
   playthroughId?: string;
   encounterId?: string;
+  storyState?: StoryStateSnapshot;
 }
 
 export interface SimulationResult {
@@ -89,6 +91,7 @@ export function simulate(
   let state = startFight(encounter, player, {
     playthroughId: options.playthroughId ?? 'sim-playthrough',
     encounterId: options.encounterId ?? 'sim-encounter',
+    storyState: options.storyState,
   });
 
   const beatsPerPhase: number[] = [];

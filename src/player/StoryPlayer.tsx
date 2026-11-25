@@ -113,6 +113,11 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     const started = startFight(currentNode.encounter, playthrough.combat, {
       playthroughId: playthrough.id,
       encounterId: currentNode.id,
+      storyState: {
+        flags: playthrough.flags,
+        items: playthrough.items,
+        stats: { ...playthrough.stats, health: playthrough.combat.health },
+      },
     });
     const nextPt: PlaythroughState = {
       ...playthrough,
@@ -213,12 +218,16 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
       currentNode.encounter,
       active.fight.currentTactic,
     );
-    const caption = selectResultCaption(
+    const baseCaption = selectResultCaption(
       step.events,
       active.fight.currentTactic,
       currentNode.encounter,
       step.state.beatNumber,
     );
+    const allyCaptions = step.events
+      .filter((e) => e.type === 'allyActed' && e.caption)
+      .map((e) => e.caption!);
+    const caption = allyCaptions.length > 0 ? `${allyCaptions.join(' ')} ${baseCaption}` : baseCaption;
     setResultCaption(caption);
     setFeedback(
       deriveHitFeedback(

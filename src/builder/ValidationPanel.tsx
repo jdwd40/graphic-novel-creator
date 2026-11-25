@@ -3,9 +3,14 @@ import type { ValidationMessage } from '../story/validation';
 export interface ValidationPanelProps {
   messages: ValidationMessage[];
   onFocusNode: (nodeId: string) => void;
+  onFocusItem?: (itemId: string) => void;
 }
 
-export function ValidationPanel({ messages, onFocusNode }: ValidationPanelProps) {
+export function ValidationPanel({
+  messages,
+  onFocusNode,
+  onFocusItem,
+}: ValidationPanelProps) {
   const errors = messages.filter((m) => m.severity === 'error');
   const warnings = messages.filter((m) => m.severity === 'warning');
 
@@ -28,7 +33,13 @@ export function ValidationPanel({ messages, onFocusNode }: ValidationPanelProps)
               <button
                 type="button"
                 className="validation-item__btn"
-                onClick={() => onFocusNode(msg.nodeId)}
+                onClick={() => {
+                  if (msg.itemId && onFocusItem) {
+                    onFocusItem(msg.itemId);
+                  } else if (msg.nodeId) {
+                    onFocusNode(msg.nodeId);
+                  }
+                }}
               >
                 <span className="validation-item__tag">
                   {msg.severity === 'error' ? 'Error' : 'Warning'}

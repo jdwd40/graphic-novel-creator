@@ -44,6 +44,7 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [sideTab, setSideTab] = useState<'inspector' | 'items' | 'images'>('inspector');
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const nodes = useMemo(() => storyToFlowNodes(story, selectedNodeId), [story, selectedNodeId]);
   const edges = useMemo(() => storyToFlowEdges(story), [story]);
@@ -69,6 +70,7 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
   const focusNode = useCallback(
     (nodeId: string) => {
       setSelectedNodeId(nodeId);
+      setSideTab('inspector');
       const target = story.nodes[nodeId];
       if (target && rfInstance) {
         rfInstance.setCenter(target.position.x + 110, target.position.y + 60, { zoom: 1 });
@@ -76,6 +78,11 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
     },
     [rfInstance, story.nodes],
   );
+
+  const focusItem = useCallback((itemId: string) => {
+    setSelectedItemId(itemId);
+    setSideTab('items');
+  }, []);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -284,7 +291,11 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
           </ReactFlow>
         </div>
 
-        <ValidationPanel messages={validationMessages} onFocusNode={focusNode} />
+        <ValidationPanel
+          messages={validationMessages}
+          onFocusNode={focusNode}
+          onFocusItem={focusItem}
+        />
       </div>
 
       <aside className="inspector-pane" aria-label="Node inspector">
@@ -293,6 +304,7 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
         ) : sideTab === 'items' ? (
           <ItemsPanel
             story={story}
+            initialItemId={selectedItemId}
             onUpdateStory={commitStory}
           />
         ) : selectedNode ? (

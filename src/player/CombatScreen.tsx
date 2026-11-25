@@ -5,12 +5,12 @@ import { getActiveMoment, getAvailableMomentChoices } from '../combat/resolver';
 import type {
   Encounter,
   FightState,
-  Move,
   StoryStateSnapshot,
   Tactic,
 } from '../combat/types';
 import { ChoiceList } from './ChoiceList';
 import { HealthPips } from './HealthPips';
+import { TellBanner } from './TellBanner';
 import { useImageUrl } from '../story/useImageUrl';
 import './CombatScreen.css';
 
@@ -35,30 +35,6 @@ export interface CombatScreenProps {
   onSelectTactic: (tactic: Tactic) => void;
   onRetreat: () => void;
   onSelectMomentChoice?: (choiceIndex: number) => void;
-}
-
-function IntentIcon({ move }: { move: Move }) {
-  const title =
-    move === 'heavy' ? 'Heavy windup' : move === 'open' ? 'Enemy open' : 'Quick strike';
-  return (
-    <span className="combat-intent-badge" title={title} aria-label={`Intent: ${title}`}>
-      {move === 'heavy' && (
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 2L15 10H22L16 15L18 22L12 18L6 22L8 15L2 10H9L12 2Z" fill="currentColor" />
-        </svg>
-      )}
-      {move === 'strike' && (
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 20L19 5M14 4H20V10" stroke="currentColor" strokeWidth="2.5" fill="none" />
-        </svg>
-      )}
-      {move === 'open' && (
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="2.5" fill="none" />
-        </svg>
-      )}
-    </span>
-  );
 }
 
 const TACTIC_OPTIONS: ReadonlyArray<{ value: Tactic; label: string }> = [
@@ -168,8 +144,6 @@ export function CombatScreen({
             className="combat-art-img"
           />
 
-          {tell.showIcon && <IntentIcon move={tell.move} />}
-
           {feedback?.sfxText && (
             <span
               className={`combat-sfx-badge combat-sfx-badge--${feedback.sfxVariant}`}
@@ -178,17 +152,15 @@ export function CombatScreen({
               {feedback.sfxText}
             </span>
           )}
+
+          {!hasOpenMoment && (
+            <TellBanner caption={tell.caption} move={tell.move} showIcon={tell.showIcon} />
+          )}
         </div>
 
         <div className="story-caption-box" data-testid="combat-result-caption">
           {activeMoment ? activeMoment.moment.caption : resultCaption}
         </div>
-
-        {!hasOpenMoment && tell.caption && (
-          <div className="combat-tell-box" data-testid="combat-tell-caption">
-            {tell.caption}
-          </div>
-        )}
       </div>
 
       {hasOpenMoment ? (

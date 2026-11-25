@@ -323,19 +323,54 @@
   animation: pip-break 0.3s ease-out;
 }
 
-.combat-intent-badge {
+.combat-tell-banner {
   position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #fef3c7;
-  color: #111827;
-  border: 2px solid #111827;
+  left: 0.45rem;
+  right: 0.45rem;
+  bottom: 0.45rem;
+  z-index: 4;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border: 2px solid #16181d;
+  border-radius: 8px;
+  background: rgba(254, 249, 195, 0.96);
+  color: #111827;
+  box-shadow: 2px 2px 0 #16181d;
+  font-style: italic;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.combat-tell-banner--heavy {
+  background: rgba(254, 240, 138, 0.98);
+}
+
+.combat-tell-banner--open {
+  background: rgba(220, 252, 231, 0.96);
+}
+
+.combat-tell-banner--vague {
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.tell-banner__icon {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  border: 2px solid #16181d;
+  background: #ffffff;
+  color: #111827;
+  flex-shrink: 0;
+}
+
+.tell-banner__text {
+  min-width: 0;
 }
 
 .combat-sfx-badge {
@@ -378,17 +413,6 @@
   font-size: 0.98rem;
   line-height: 1.45;
   box-shadow: 2px 2px 0 #16181d;
-}
-
-.combat-tell-box {
-  background: #fef9c3;
-  color: #1e293b;
-  border: 2px dashed #92400e;
-  border-radius: 8px;
-  padding: 0.65rem 0.9rem;
-  font-style: italic;
-  font-size: 0.94rem;
-  line-height: 1.4;
 }
 
 .combat-tactic-bar {

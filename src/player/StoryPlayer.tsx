@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { nextTell, selectResultCaption } from '../combat/captions';
+import { evaluateCondition } from '../combat/conditions';
 import { getArmourBuffer, getEffectiveMaxHealth, getWeaponDamage } from '../combat/playerState';
 import {
   advanceBeat,
@@ -353,7 +354,16 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
           </button>
         </section>
       ) : currentNode.kind === 'passage' ? (
-        <PassageView node={currentNode} onChoice={handlePassageChoice} onRestart={handleRestart} />
+        <PassageView
+          node={currentNode}
+          storyState={{
+            flags: playthrough.flags,
+            items: playthrough.items,
+            stats: { ...playthrough.stats, health: playthrough.combat.health },
+          }}
+          onChoice={handlePassageChoice}
+          onRestart={handleRestart}
+        />
       ) : playthrough.activeFight && playthrough.activeFight.encounterId === currentNode.id ? (
         <CombatScreen
           encounter={currentNode.encounter}
@@ -375,13 +385,19 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
 
 function PassageView({
   node,
+  storyState,
   onChoice,
   onRestart,
 }: {
   node: PassageNode;
+  storyState: { flags: Record<string, boolean>; items: string[]; stats: Record<string, number> };
   onChoice: (choiceId: string) => void;
   onRestart: () => void;
 }) {
+  const visibleChoices = node.choices.filter((choice) =>
+    evaluateCondition(choice.condition, storyState),
+  );
+
   return (
     <article className="combat-screen" data-testid={`passage-view-${node.id}`}>
       {node.image && (
@@ -393,8 +409,8 @@ function PassageView({
         <h2 style={{ margin: '0 0 0.4rem', fontSize: '1.1rem' }}>{node.title}</h2>
         <p style={{ margin: 0 }}>{node.text}</p>
       </div>
-      {node.choices.length > 0 ? (
-        <ChoiceList choices={node.choices} onSelect={onChoice} />
+      {visibleChoices.length > 0 ? (
+        <ChoiceList choices={visibleChoices} onSelect={onChoice} />
       ) : (
         <button type="button" className="story-choice-btn" onClick={onRestart}>
           Play again

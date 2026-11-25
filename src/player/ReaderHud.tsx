@@ -11,6 +11,7 @@ export interface ReaderHudProps {
   onToggleSatchel: () => void;
   onToggleAutoAdvance: (checked: boolean) => void;
   onRestart: () => void;
+  onOpenBattleGuide?: () => void;
   onExitToBuilder?: () => void;
 }
 
@@ -24,6 +25,7 @@ export function ReaderHud({
   onToggleSatchel,
   onToggleAutoAdvance,
   onRestart,
+  onOpenBattleGuide,
   onExitToBuilder,
 }: ReaderHudProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -90,6 +92,19 @@ export function ReaderHud({
             />
             <span>Auto-advance beats</span>
           </label>
+
+          {onOpenBattleGuide && (
+            <button
+              type="button"
+              className="reader-menu__btn"
+              onClick={() => {
+                setMenuOpen(false);
+                onOpenBattleGuide();
+              }}
+            >
+              How combat works
+            </button>
+          )}
 
           {!confirmRestart ? (
             <button

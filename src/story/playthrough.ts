@@ -32,6 +32,7 @@ export interface PlaythroughState {
   activeFight: ActiveFightRecord | null;
   notifications: string[];
   notificationCards?: StoryNotificationCard[];
+  seenBattleGuide?: boolean;
 }
 
 const PLAYTHROUGH_STORAGE_PREFIX = 'gnc_playthrough_v1_';
@@ -52,6 +53,7 @@ export function createPlaythrough(story: Story, id = `pt_${story.id}_1`): Playth
     activeFight: null,
     notifications: [],
     notificationCards: [],
+    seenBattleGuide: false,
   };
 }
 

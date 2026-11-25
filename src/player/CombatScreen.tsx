@@ -10,6 +10,7 @@ import type {
 } from '../combat/types';
 import { ChoiceList } from './ChoiceList';
 import { HealthPips } from './HealthPips';
+import { TacticBar } from './TacticBar';
 import { TellBanner } from './TellBanner';
 import { useImageUrl } from '../story/useImageUrl';
 import './CombatScreen.css';
@@ -36,12 +37,6 @@ export interface CombatScreenProps {
   onRetreat: () => void;
   onSelectMomentChoice?: (choiceIndex: number) => void;
 }
-
-const TACTIC_OPTIONS: ReadonlyArray<{ value: Tactic; label: string }> = [
-  { value: 'press', label: 'Press' },
-  { value: 'steady', label: 'Steady' },
-  { value: 'guard', label: 'Guard' },
-];
 
 export function CombatScreen({
   encounter,
@@ -176,24 +171,12 @@ export function CombatScreen({
         </div>
       ) : (
         <>
-          <div className="combat-tactic-bar" role="group" aria-label="Combat tactics">
-            {TACTIC_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                className="tactic-btn"
-                aria-pressed={fightState.currentTactic === opt.value}
-                onClick={() => onSelectTactic(opt.value)}
-              >
-                {opt.label}
-              </button>
-            ))}
-            {encounter.allowRetreat && (
-              <button type="button" className="retreat-btn" onClick={onRetreat}>
-                Retreat
-              </button>
-            )}
-          </div>
+          <TacticBar
+            currentTactic={fightState.currentTactic}
+            allowRetreat={encounter.allowRetreat}
+            onSelectTactic={onSelectTactic}
+            onRetreat={onRetreat}
+          />
 
           <p className="combat-tap-hint">Tap panel or caption to advance one beat</p>
         </>

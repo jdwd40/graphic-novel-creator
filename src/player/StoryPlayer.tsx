@@ -28,6 +28,7 @@ import {
 } from '../story/settings';
 import type { EncounterNode, PassageNode, Story } from '../story/types';
 import { useImageUrl } from '../story/useImageUrl';
+import { BattleGuideModal } from './BattleGuideModal';
 import { ChoiceList } from './ChoiceList';
 import { CombatScreen, type CombatFeedbackState } from './CombatScreen';
 import { EndOfFightPage } from './EndOfFightPage';
@@ -107,6 +108,8 @@ export function StoryPlayer({
   const [unwiredNotice, setUnwiredNotice] = useState<string | null>(null);
   const [resultCaption, setResultCaption] = useState<string>('');
   const [showInventory, setShowInventory] = useState(false);
+  const [battleGuideOpen, setBattleGuideOpen] = useState(false);
+  const hasInitialPlaythroughRef = useRef(Boolean(initialPlaythrough));
   const [feedback, setFeedback] = useState<CombatFeedbackState | undefined>(undefined);
   const [readerSettings, setReaderSettings] = useState<ReaderSettings>(() =>
     loadReaderSettings(),
@@ -320,7 +323,7 @@ export function StoryPlayer({
 
   // Auto-advance timer when reader setting is enabled (paused while Satchel sheet is open).
   useEffect(() => {
-    if (!readerSettings.autoAdvance || showInventory) return;
+    if (!readerSettings.autoAdvance || showInventory || battleGuideOpen) return;
     if (!currentNode || currentNode.kind !== 'encounter') return;
     const active = playthrough.activeFight;
     if (!active || active.encounterId !== currentNode.id) return;
@@ -340,6 +343,7 @@ export function StoryPlayer({
     }, delayMs);
     return () => window.clearTimeout(timer);
   }, [
+    battleGuideOpen,
     currentNode,
     handleAdvanceBeat,
     playthrough.activeFight,
@@ -471,6 +475,17 @@ export function StoryPlayer({
 
   const pageTransitionKey = `${playthrough.currentNodeId}:${renderedView}`;
 
+  // Show the combat guide once per fresh playthrough on the first combat encounter.
+  useEffect(() => {
+    if (onTitleScreen || renderedView !== 'combat') return;
+    if (hasInitialPlaythroughRef.current || playthrough.seenBattleGuide) return;
+    setBattleGuideOpen(true);
+    updatePlaythrough({
+      ...playthrough,
+      seenBattleGuide: true,
+    });
+  }, [onTitleScreen, playthrough, renderedView, updatePlaythrough]);
+
   const pageContainerRef = useRef<HTMLDivElement | null>(null);
   const lastTransitionRef = useRef<string | null>(null);
 
@@ -530,8 +545,11 @@ export function StoryPlayer({
         onToggleSatchel={() => setShowInventory((v) => !v)}
         onToggleAutoAdvance={handleToggleAutoAdvance}
         onRestart={handleRestart}
+        onOpenBattleGuide={() => setBattleGuideOpen(true)}
         onExitToBuilder={onExitToBuilder}
       />
+
+      {battleGuideOpen && <BattleGuideModal onClose={() => setBattleGuideOpen(false)} />}
 
       {showInventory && (
         <SatchelSheet

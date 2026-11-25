@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Background,
   Controls,
@@ -8,6 +8,8 @@ import {
   type Edge,
   type Node,
   type NodeChange,
+  type OnConnectEnd,
+  type OnConnectStart,
   type ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -23,6 +25,7 @@ import { PassageNodeCard } from './PassageNodeCard';
 import { StorySettingsPanel } from './StorySettingsPanel';
 import { ValidationPanel } from './ValidationPanel';
 import {
+  createAndLinkNodeFromHandle,
   createDefaultEncounterNode,
   createDefaultPassageNode,
   storyToFlowEdges,
@@ -40,12 +43,26 @@ export interface StoryMapBuilderProps {
   onStoryChange: (nextStory: Story) => void;
 }
 
+interface DropMenuState {
+  sourceNodeId: string;
+  sourceHandleId: string;
+  left: number;
+  top: number;
+  flowPos: { x: number; y: number };
+}
+
 function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(story.startNodeId);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [sideTab, setSideTab] = useState<'inspector' | 'items' | 'images' | 'settings'>('inspector');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [dropMenu, setDropMenu] = useState<DropMenuState | null>(null);
+  const flowWrapRef = useRef<HTMLDivElement | null>(null);
+  const connectingRef = useRef<{ nodeId: string; handleId: string } | null>(null);
+  const didConnectRef = useRef(false);
+  const handledByRfRef = useRef(false);
+  const domDragRef = useRef<{ nodeId: string; handleId: string; startX: number; startY: number } | null>(null);
 
   const nodes = useMemo(() => storyToFlowNodes(story, selectedNodeId), [story, selectedNodeId]);
   const edges = useMemo(() => storyToFlowEdges(story), [story]);
@@ -127,6 +144,9 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
 
   const handleConnect = useCallback(
     (connection: Connection) => {
+      didConnectRef.current = true;
+      connectingRef.current = null;
+      setDropMenu(null);
       if (!connection.source || !connection.target || !connection.sourceHandle) return;
       const sourceNode = story.nodes[connection.source];
       if (!sourceNode) return;
@@ -185,13 +205,129 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
     [commitStory, story],
   );
 
+  const getViewportCenterPosition = useCallback(
+    (fallback: { x: number; y: number }): { x: number; y: number } => {
+      const wrapEl = flowWrapRef.current;
+      if (rfInstance && wrapEl) {
+        const rect = wrapEl.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          return rfInstance.screenToFlowPosition({
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          });
+        }
+      }
+      return fallback;
+    },
+    [rfInstance],
+  );
+
+  const openDropMenuAtPoint = useCallback(
+    (nodeId: string, handleId: string, clientX: number, clientY: number) => {
+      const wrapRect = flowWrapRef.current?.getBoundingClientRect();
+      const left = wrapRect
+        ? Math.max(12, Math.min(clientX - wrapRect.left, Math.max(160, wrapRect.width - 180)))
+        : 120;
+      const top = wrapRect
+        ? Math.max(12, Math.min(clientY - wrapRect.top, Math.max(120, wrapRect.height - 130)))
+        : 120;
+
+      const sourcePos = story.nodes[nodeId]?.position ?? { x: 160, y: 160 };
+      const flowPos =
+        rfInstance && wrapRect && wrapRect.width > 0 && wrapRect.height > 0
+          ? rfInstance.screenToFlowPosition({ x: clientX, y: clientY })
+          : { x: sourcePos.x + 340, y: sourcePos.y };
+
+      setDropMenu({
+        sourceNodeId: nodeId,
+        sourceHandleId: handleId,
+        left,
+        top,
+        flowPos,
+      });
+    },
+    [rfInstance, story.nodes],
+  );
+
+  const handleConnectStart: OnConnectStart = useCallback((_event, params) => {
+    if (params.handleType === 'source' && params.nodeId && params.handleId) {
+      connectingRef.current = { nodeId: params.nodeId, handleId: params.handleId };
+      didConnectRef.current = false;
+      handledByRfRef.current = false;
+    } else {
+      connectingRef.current = null;
+    }
+  }, []);
+
+  const handleConnectEnd: OnConnectEnd = useCallback(
+    (event, connectionState) => {
+      handledByRfRef.current = true;
+      domDragRef.current = null;
+      const pending = connectingRef.current;
+      connectingRef.current = null;
+      if (!pending || didConnectRef.current || connectionState?.isValid) {
+        return;
+      }
+      const targetEl = event.target instanceof Element ? event.target : null;
+      if (targetEl?.closest('.react-flow__handle')) return;
+
+      const touch = 'changedTouches' in event ? event.changedTouches[0] : null;
+      const clientX = touch ? touch.clientX : 'clientX' in event ? event.clientX : 280;
+      const clientY = touch ? touch.clientY : 'clientY' in event ? event.clientY : 180;
+      openDropMenuAtPoint(pending.nodeId, pending.handleId, clientX, clientY);
+    },
+    [openDropMenuAtPoint],
+  );
+
+  useEffect(() => {
+    const onMouseUp = (upEvent: MouseEvent) => {
+      const drag = domDragRef.current;
+      domDragRef.current = null;
+      if (!drag || didConnectRef.current || handledByRfRef.current) return;
+      if (Math.hypot(upEvent.clientX - drag.startX, upEvent.clientY - drag.startY) < 12) return;
+      if (upEvent.target instanceof Element && upEvent.target.closest('.react-flow__handle')) {
+        return;
+      }
+      openDropMenuAtPoint(drag.nodeId, drag.handleId, upEvent.clientX, upEvent.clientY);
+    };
+    document.addEventListener('mouseup', onMouseUp);
+    return () => document.removeEventListener('mouseup', onMouseUp);
+  }, [openDropMenuAtPoint]);
+
+  useEffect(() => {
+    if (!dropMenu) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setDropMenu(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [dropMenu]);
+
+  const handleCreateFromDropMenu = (kind: 'passage' | 'encounter') => {
+    if (!dropMenu) return;
+    const { story: nextStory, createdNodeId } = createAndLinkNodeFromHandle(
+      story,
+      dropMenu.sourceNodeId,
+      dropMenu.sourceHandleId,
+      kind,
+      dropMenu.flowPos,
+    );
+    commitStory(nextStory);
+    setSelectedNodeId(createdNodeId);
+    setSideTab('inspector');
+    setDropMenu(null);
+  };
+
   const handleAddEncounter = () => {
     const count = Object.keys(story.nodes).length + 1;
     let id = `enc_${count}`;
     while (story.nodes[id]) {
       id = `${id}_x`;
     }
-    const node = createDefaultEncounterNode(id, { x: 180 + count * 25, y: 220 });
+    const pos = getViewportCenterPosition({ x: 180 + count * 25, y: 220 });
+    const node = createDefaultEncounterNode(id, pos);
     commitStory({
       ...story,
       nodes: { ...story.nodes, [id]: node },
@@ -205,7 +341,8 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
     while (story.nodes[id]) {
       id = `${id}_x`;
     }
-    const node = createDefaultPassageNode(id, { x: 160 + count * 25, y: 140 });
+    const pos = getViewportCenterPosition({ x: 160 + count * 25, y: 140 });
+    const node = createDefaultPassageNode(id, pos);
     commitStory({
       ...story,
       nodes: { ...story.nodes, [id]: node },
@@ -279,15 +416,35 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
           </div>
         )}
 
-        <div className="builder-flow-wrap">
+        <div
+          className="builder-flow-wrap"
+          ref={flowWrapRef}
+          onMouseDownCapture={(e) => {
+            if (e.button !== 0) return;
+            const handle = (e.target instanceof Element ? e.target : null)?.closest(
+              '.react-flow__handle.source',
+            );
+            const nodeId = handle?.getAttribute('data-nodeid');
+            const handleId = handle?.getAttribute('data-handleid');
+            if (nodeId && handleId) {
+              domDragRef.current = { nodeId, handleId, startX: e.clientX, startY: e.clientY };
+              didConnectRef.current = false;
+              handledByRfRef.current = false;
+            }
+          }}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
             onNodesChange={handleNodesChange}
+            onConnectStart={handleConnectStart}
             onConnect={handleConnect}
+            onConnectEnd={handleConnectEnd}
             onEdgesDelete={handleEdgesDelete}
+            onPaneClick={() => setDropMenu(null)}
             onNodeClick={(_e, node: Node) => {
+              setDropMenu(null);
               setSelectedNodeId(node.id);
               setSideTab('inspector');
             }}
@@ -299,6 +456,40 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
             <Background />
             <Controls />
           </ReactFlow>
+
+          {dropMenu && (
+            <div
+              className="builder-drop-menu"
+              role="menu"
+              aria-label="Create linked node"
+              data-testid="drag-create-menu"
+              style={{ left: dropMenu.left, top: dropMenu.top }}
+            >
+              <div className="builder-drop-menu__title">Link to new node</div>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => handleCreateFromDropMenu('passage')}
+              >
+                New passage
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => handleCreateFromDropMenu('encounter')}
+              >
+                New encounter
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className="builder-drop-menu__cancel"
+                onClick={() => setDropMenu(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
 
         <ValidationPanel

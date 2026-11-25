@@ -55,8 +55,54 @@
 }
 
 .builder-flow-wrap {
+  position: relative;
   flex: 1;
   min-height: 360px;
+}
+
+.builder-drop-menu {
+  position: absolute;
+  z-index: 30;
+  min-width: 165px;
+  background: #ffffff;
+  border: 2px solid #16181d;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 #16181d;
+  padding: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.builder-drop-menu__title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #475569;
+  padding: 0.1rem 0.25rem;
+}
+
+.builder-drop-menu button {
+  cursor: pointer;
+  text-align: left;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #94a3b8;
+  border-radius: 5px;
+  background: #f8fafc;
+  color: #0f172a;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.builder-drop-menu button:hover {
+  background: #dbeafe;
+  border-color: #1d4ed8;
+}
+
+.builder-drop-menu__cancel {
+  background: #ffffff !important;
+  color: #475569 !important;
 }
 
 .inspector-pane {

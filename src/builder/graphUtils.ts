@@ -119,3 +119,64 @@ export function createDefaultPassageNode(
     ],
   };
 }
+
+function nextUniqueNodeId(story: Story, prefix: 'passage' | 'enc'): string {
+  let counter = Object.keys(story.nodes).length + 1;
+  let candidate = `${prefix}_${counter}`;
+  while (story.nodes[candidate]) {
+    counter += 1;
+    candidate = `${prefix}_${counter}`;
+  }
+  return candidate;
+}
+
+/**
+ * Creates a passage or encounter node at `position` and links it from a source
+ * node's choice handle or encounter exit handle.
+ */
+export function createAndLinkNodeFromHandle(
+  story: Story,
+  sourceNodeId: string,
+  sourceHandleId: string,
+  kind: 'passage' | 'encounter',
+  position: { x: number; y: number },
+): { story: Story; createdNodeId: string } {
+  const createdNodeId = nextUniqueNodeId(story, kind === 'passage' ? 'passage' : 'enc');
+  const createdNode =
+    kind === 'passage'
+      ? createDefaultPassageNode(createdNodeId, position)
+      : createDefaultEncounterNode(createdNodeId, position);
+
+  const sourceNode = story.nodes[sourceNodeId];
+  let updatedSource = sourceNode;
+  if (sourceNode) {
+    if (sourceNode.kind === 'passage') {
+      updatedSource = {
+        ...sourceNode,
+        choices: sourceNode.choices.map((c) =>
+          c.id === sourceHandleId ? { ...c, targetNodeId: createdNodeId } : c,
+        ),
+      };
+    } else {
+      updatedSource = {
+        ...sourceNode,
+        exitTargets: {
+          ...sourceNode.exitTargets,
+          [sourceHandleId]: createdNodeId,
+        },
+      };
+    }
+  }
+
+  return {
+    createdNodeId,
+    story: {
+      ...story,
+      nodes: {
+        ...story.nodes,
+        ...(updatedSource ? { [sourceNodeId]: updatedSource } : {}),
+        [createdNodeId]: createdNode,
+      },
+    },
+  };
+}

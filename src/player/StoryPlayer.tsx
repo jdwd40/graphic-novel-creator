@@ -34,12 +34,14 @@ import { EndOfFightPage } from './EndOfFightPage';
 import { NotificationCard } from './NotificationCard';
 import { ReaderHud } from './ReaderHud';
 import { SatchelSheet } from './SatchelSheet';
+import { TitleScreen } from './TitleScreen';
 import { deriveHitFeedback } from './hitFeedback';
 import './PlayerTheme.css';
 
 export interface StoryPlayerProps {
   story: Story;
   initialPlaythrough?: PlaythroughState;
+  showTitleScreen?: boolean;
   onExitToBuilder?: () => void;
 }
 
@@ -91,11 +93,16 @@ export function applyFightOutcomeToPlaythrough(
 export function StoryPlayer({
   story,
   initialPlaythrough,
+  showTitleScreen,
   onExitToBuilder,
 }: StoryPlayerProps) {
+  const [onTitleScreen, setOnTitleScreen] = useState<boolean>(
+    () => showTitleScreen ?? !initialPlaythrough,
+  );
+  const savedOnMount = loadPlaythrough(story.id);
   const [playthrough, setPlaythrough] = useState<PlaythroughState>(() => {
     if (initialPlaythrough) return initialPlaythrough;
-    return loadPlaythrough(story.id) ?? createPlaythrough(story);
+    return savedOnMount ?? createPlaythrough(story);
   });
   const [unwiredNotice, setUnwiredNotice] = useState<string | null>(null);
   const [resultCaption, setResultCaption] = useState<string>('');
@@ -117,6 +124,7 @@ export function StoryPlayer({
 
   // Start fight automatically when arriving on an encounter node without an active fight.
   useEffect(() => {
+    if (onTitleScreen) return;
     if (!currentNode || currentNode.kind !== 'encounter') return;
     if (
       playthrough.activeFight &&
@@ -141,7 +149,7 @@ export function StoryPlayer({
     savePlaythrough(nextPt);
     setPlaythrough(nextPt);
     setResultCaption(`${currentNode.encounter.enemy.name} bars your path.`);
-  }, [currentNode, playthrough]);
+  }, [currentNode, onTitleScreen, playthrough]);
 
   const updatePlaythrough = useCallback((next: PlaythroughState) => {
     savePlaythrough(next);
@@ -449,6 +457,32 @@ export function StoryPlayer({
   const maxArmourBuffer = liveFight
     ? liveFight.playerMaxBuffer
     : getArmourBuffer(playthrough.combat);
+
+  if (onTitleScreen) {
+    return (
+      <div className="player-shell" data-testid="story-player">
+        <TitleScreen
+          story={story}
+          hasSave={Boolean(loadPlaythrough(story.id))}
+          onContinue={() => {
+            const loaded = loadPlaythrough(story.id);
+            if (loaded) {
+              setPlaythrough(loaded);
+            }
+            setOnTitleScreen(false);
+          }}
+          onNewGame={() => {
+            const fresh = createPlaythrough(story);
+            setUnwiredNotice(null);
+            setResultCaption('');
+            updatePlaythrough(fresh);
+            setOnTitleScreen(false);
+          }}
+          onExitToBuilder={onExitToBuilder}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="player-shell" data-testid="story-player">

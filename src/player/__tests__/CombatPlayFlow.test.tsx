@@ -12,7 +12,7 @@ describe('StoryPlayer combat beat flow and exits', () => {
 
   it('wins the seeded Standard encounter with tier 1 gear by tapping on Steady and persists lost health', () => {
     const story = createSeedStory();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
 
     // Intro -> Armory (equips Tier 1 Rusty Sword & Padded Coat)
     fireEvent.click(screen.getByRole('button', { name: /gear up at the watch armory/i }));

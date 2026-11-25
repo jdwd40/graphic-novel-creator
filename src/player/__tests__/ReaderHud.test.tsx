@@ -13,6 +13,7 @@ describe('ReaderHud (#47)', () => {
   it('hides the app header in play mode and shows no debug stats or abbreviations while reading', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: /^play$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /new game/i }));
 
     expect(
       screen.queryByRole('heading', { name: /graphic novel creator/i }),

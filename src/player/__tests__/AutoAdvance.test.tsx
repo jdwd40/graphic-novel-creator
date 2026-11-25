@@ -64,7 +64,7 @@ describe('Auto-advance reader setting', () => {
 
     // Persists across remount
     cleanup();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
     fireEvent.click(screen.getByRole('button', { name: /reader menu/i }));
     expect((screen.getByLabelText(/auto-advance/i) as HTMLInputElement).checked).toBe(true);
   });

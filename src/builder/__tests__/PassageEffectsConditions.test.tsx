@@ -18,7 +18,11 @@ describe('Passage and choice effects & conditions (#44)', () => {
       return (
         <div>
           <StoryMapBuilder story={story} onStoryChange={setStory} />
-          <StoryPlayer key={JSON.stringify(story.nodes.passage_intro)} story={story} />
+          <StoryPlayer
+            key={JSON.stringify(story.nodes.passage_intro)}
+            story={story}
+            showTitleScreen={false}
+          />
         </div>
       );
     }

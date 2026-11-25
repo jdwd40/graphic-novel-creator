@@ -20,6 +20,7 @@ import { ImageLibraryPanel } from './ImageLibraryPanel';
 import { ItemsPanel } from './ItemsPanel';
 import { PassageInspector } from './PassageInspector';
 import { PassageNodeCard } from './PassageNodeCard';
+import { StorySettingsPanel } from './StorySettingsPanel';
 import { ValidationPanel } from './ValidationPanel';
 import {
   createDefaultEncounterNode,
@@ -43,7 +44,7 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(story.startNodeId);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [sideTab, setSideTab] = useState<'inspector' | 'items' | 'images'>('inspector');
+  const [sideTab, setSideTab] = useState<'inspector' | 'items' | 'images' | 'settings'>('inspector');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const nodes = useMemo(() => storyToFlowNodes(story, selectedNodeId), [story, selectedNodeId]);
@@ -253,6 +254,13 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
           >
             Images
           </button>
+          <button
+            type="button"
+            aria-pressed={sideTab === 'settings'}
+            onClick={() => setSideTab((t) => (t === 'settings' ? 'inspector' : 'settings'))}
+          >
+            Story settings
+          </button>
         </div>
 
         {saveError && (
@@ -301,6 +309,8 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
       <aside className="inspector-pane" aria-label="Node inspector">
         {sideTab === 'images' ? (
           <ImageLibraryPanel story={story} />
+        ) : sideTab === 'settings' ? (
+          <StorySettingsPanel story={story} onUpdateStory={commitStory} />
         ) : sideTab === 'items' ? (
           <ItemsPanel
             story={story}

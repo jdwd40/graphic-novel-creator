@@ -44,7 +44,7 @@ describe('EndOfFightPage comic strip', () => {
     fireEvent.click(screen.getByTestId('combat-tap-zone'));
 
     cleanup();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
 
     // Play beat 3 to trigger the moment
     fireEvent.click(screen.getByTestId('combat-tap-zone'));
@@ -68,7 +68,7 @@ describe('EndOfFightPage comic strip', () => {
 
     // Reloading on the end-of-fight page still preserves the complete strip
     cleanup();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
     expect(within(screen.getByTestId('end-of-fight-strip')).getAllByRole('listitem')).toHaveLength(
       4,
     );

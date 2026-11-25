@@ -251,7 +251,17 @@ export const ART_ITEM_STEEL_SWORD = makeItemIcon('Steel Sword', '#38bdf8', 'stee
 export const ART_ITEM_MAIL_HAUBERK = makeItemIcon('Mail', '#94a3b8', 'mail');
 export const ART_ITEM_BELL_CHARM = makeItemIcon('Bell-Clapper Charm', '#c084fc', 'charm');
 
+export const ART_COVER = makePanelArt(
+  'The Iron Bell',
+  'An Illustrated Gamebook',
+  '#1e1b4b',
+  '#090d16',
+  '#f59e0b',
+  'bell',
+);
+
 export const SEED_IMAGE_IDS = {
+  cover: 'img_seed_cover',
   courtyard: 'img_seed_courtyard',
   armory: 'img_seed_armory',
   shrine: 'img_seed_shrine',
@@ -272,6 +282,7 @@ export const SEED_IMAGE_IDS = {
 } as const;
 
 const SEED_ART_ENTRIES: ReadonlyArray<{ id: string; name: string; dataUrl: string }> = [
+  { id: SEED_IMAGE_IDS.cover, name: 'The Iron Bell Cover.svg', dataUrl: ART_COVER },
   { id: SEED_IMAGE_IDS.courtyard, name: 'The Courtyard Gate.svg', dataUrl: ART_COURTYARD },
   { id: SEED_IMAGE_IDS.armory, name: 'Watch Armory.svg', dataUrl: ART_ARMORY },
   { id: SEED_IMAGE_IDS.shrine, name: 'Lantern Shrine.svg', dataUrl: ART_SHRINE },

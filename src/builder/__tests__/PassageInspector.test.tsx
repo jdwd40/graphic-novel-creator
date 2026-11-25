@@ -29,6 +29,7 @@ function PassageHarness({ initialStory, nodeId }: { initialStory: Story; nodeId:
       <StoryPlayer
         key={node.choices.map((c) => `${c.id}:${c.label}`).join('|')}
         story={story}
+        showTitleScreen={false}
       />
     </div>
   );
@@ -120,7 +121,7 @@ describe('PassageInspector choice authoring (#42, #43)', () => {
           <div data-testid="start-count">
             {storyToFlowNodes(story, null).filter((n) => n.data?.isStart).length}
           </div>
-          <StoryPlayer key={story.startNodeId} story={story} />
+          <StoryPlayer key={story.startNodeId} story={story} showTitleScreen={false} />
         </div>
       );
     }

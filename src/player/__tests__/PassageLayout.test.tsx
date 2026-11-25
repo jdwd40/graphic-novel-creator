@@ -27,7 +27,7 @@ describe('Full-bleed passage layout and comic theme (#48)', () => {
     const story = createSeedStory();
     for (const width of [360, 390, 768, 1280]) {
       Object.defineProperty(window, 'innerWidth', { value: width, configurable: true });
-      const { unmount } = render(<StoryPlayer story={story} />);
+      const { unmount } = render(<StoryPlayer story={story} showTitleScreen={false} />);
       expect(screen.getByTestId('passage-art-stage')).toBeInTheDocument();
       expect(screen.getByTestId('passage-caption-panel')).toBeInTheDocument();
       unmount();
@@ -41,7 +41,7 @@ describe('Full-bleed passage layout and comic theme (#48)', () => {
         passage_intro: { ...intro, image: undefined },
       },
     };
-    render(<StoryPlayer story={noArtStory} />);
+    render(<StoryPlayer story={noArtStory} showTitleScreen={false} />);
     expect(screen.queryByTestId('passage-art-stage')).not.toBeInTheDocument();
     expect(screen.getByTestId('passage-no-art-banner')).toHaveTextContent('The Courtyard Gate');
   });

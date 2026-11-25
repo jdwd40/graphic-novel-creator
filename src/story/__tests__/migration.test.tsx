@@ -65,7 +65,7 @@ describe('story schema migration to image IDs (#40)', () => {
 
   it('plays the migrated seed story from start to victory ending without losing art', () => {
     const story = createSeedStory();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
 
     // First passage renders resolved SVG courtyard image
     const introImg = screen.getByRole('img', { name: 'The Courtyard Gate' }) as HTMLImageElement;

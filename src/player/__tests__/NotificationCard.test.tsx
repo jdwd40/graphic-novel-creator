@@ -11,7 +11,7 @@ describe('Item-found and gear-change cards (#50)', () => {
 
   it('queues structured cards with images, shows gear upgrades in words, and dismisses one at a time', () => {
     const story = createSeedStory();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
 
     // First choice in seed story gives rusty_sword + padded_coat
     fireEvent.click(screen.getByRole('button', { name: /gear up at the watch armory/i }));

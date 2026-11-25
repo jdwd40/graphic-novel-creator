@@ -63,7 +63,7 @@ describe('Moment choices on the combat screen', () => {
 
     // Reloading keeps the moment open
     cleanup();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
     expect(screen.getByTestId('moment-choices-panel')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Demand surrender.' })).toBeInTheDocument();
 

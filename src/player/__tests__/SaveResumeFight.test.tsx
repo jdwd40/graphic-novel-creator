@@ -35,7 +35,7 @@ describe('Save and resume a fight in progress', () => {
 
     cleanup();
     // Simulate full page reload reading exclusively from localStorage
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
 
     expect(screen.getByTestId('combat-screen')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Guard' })).toHaveAttribute('aria-pressed', 'true');
@@ -81,7 +81,7 @@ describe('Save and resume a fight in progress', () => {
     expect(loadPlaythrough(story.id)?.activeFight?.fight.pendingOpen).toBe(true);
 
     cleanup();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
     expect(loadPlaythrough(story.id)?.activeFight?.fight.pendingOpen).toBe(true);
 
     // Switch to Press and resolve the Open beat -> deals 2D = 6 damage!
@@ -118,7 +118,7 @@ describe('Save and resume a fight in progress', () => {
     const activeBefore = loadPlaythrough(story.id)!.activeFight!.fight.activePattern;
 
     cleanup();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
     const activeAfter = loadPlaythrough(story.id)!.activeFight!.fight.activePattern;
     expect(activeAfter).toEqual(activeBefore);
   });
@@ -170,7 +170,7 @@ describe('Save and resume a fight in progress', () => {
 
     // Simulate reload mid-fight -> bar and pips still match
     cleanup();
-    render(<StoryPlayer story={story} />);
+    render(<StoryPlayer story={story} showTitleScreen={false} />);
     expect(screen.getByRole('img', { name: 'Reader health 2 of 6, armour 0' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Health 2 of 6, armour 0' })).toBeInTheDocument();
   });

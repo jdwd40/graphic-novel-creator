@@ -298,7 +298,7 @@ Six decisions are still open:
 - [x] **Confirmed (Issue #11):** No beat cap for now. Simulations across all nine Weak/Standard/Tough preset combinations at tier 1 show careful play wins faster everywhere (3–6 beats vs 6–12) and loses equal or less health in 8 of 9 matchups (Tough Brute is the sole 1 HP trade-off at 9 beats vs 6).
 - [ ] Health only returns through story effects. Decide whether the app should offer a standard "rest" effect so creators do not starve readers by accident.
 - [x] **Confirmed (Issue #3):** Retreat costs one free enemy Strike (resolved as if on Steady); if that Strike takes the player to 0 health, the fight leaves by Defeat. Per-encounter pricing is deferred until creators ask for it.
-- [ ] Enemy health shows as exact pips. A vaguer state such as fresh, hurt and staggering would read more like a story but hides the race.
+- [x] **Confirmed (Issue #17):** Ship exact pips for enemy health so readers can judge when Press is worth the risk. Revisit a described state as a future boss rule-break rather than a global setting.
 - [ ] Boss numbers and the three rule-breaks need a simulation pass before they are offered to creators.
 
 Suggested build order, each step usable on its own:

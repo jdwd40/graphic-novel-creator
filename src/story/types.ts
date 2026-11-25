@@ -6,6 +6,7 @@ export interface ItemDefinition {
   id: string;
   name: string;
   description: string;
+  image?: string;
   weaponDamage?: number;
   armourBuffer?: number;
 }
@@ -49,6 +50,11 @@ export type StoryNode = PassageNode | EncounterNode;
 export interface Story {
   id: string;
   title: string;
+  schemaVersion?: number;
+  updatedAt?: number;
+  coverImage?: string;
+  blurb?: string;
+  playerPortrait?: string;
   startNodeId: string;
   items: Record<string, ItemDefinition>;
   nodes: Record<string, StoryNode>;

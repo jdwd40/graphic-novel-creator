@@ -1,4 +1,4 @@
-import type { ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { BEHAVIOUR_PRESETS, TOUGHNESS_PRESETS, VALID_MOVES } from '../combat/constants';
 import type {
   BehaviourPreset,
@@ -7,6 +7,7 @@ import type {
   TellClarity,
   ToughnessPreset,
 } from '../combat/types';
+import { saveImageFile } from '../story/imageStore';
 import type { EncounterNode } from '../story/types';
 import { ArtVariantsEditor } from './ArtVariantsEditor';
 import { BalancePreviewPanel } from './BalancePreviewPanel';
@@ -16,11 +17,13 @@ import { StoryIntegrationEditor } from './StoryIntegrationEditor';
 
 export interface EncounterInspectorProps {
   node: EncounterNode;
+  storyId?: string;
   onUpdate: (nextEncounter: Encounter) => void;
 }
 
-export function EncounterInspector({ node, onUpdate }: EncounterInspectorProps) {
+export function EncounterInspector({ node, storyId, onUpdate }: EncounterInspectorProps) {
   const { encounter } = node;
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     onUpdate({
@@ -30,25 +33,26 @@ export function EncounterInspector({ node, onUpdate }: EncounterInspectorProps) 
   };
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setImageError(null);
     onUpdate({
       ...encounter,
       enemy: { ...encounter.enemy, image: e.target.value },
     });
   };
 
-  const handleImageFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        onUpdate({
-          ...encounter,
-          enemy: { ...encounter.enemy, image: reader.result },
-        });
-      }
-    };
-    reader.readAsDataURL(file);
+    setImageError(null);
+    try {
+      const saved = await saveImageFile(file, { storyId, name: file.name });
+      onUpdate({
+        ...encounter,
+        enemy: { ...encounter.enemy, image: saved.id },
+      });
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : 'Failed to save image.');
+    }
   };
 
   const handleToughnessChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -154,6 +158,11 @@ export function EncounterInspector({ node, onUpdate }: EncounterInspectorProps) 
           accept="image/*"
           onChange={handleImageFileUpload}
         />
+        {imageError && (
+          <div role="alert" className="validation-error" style={{ color: '#b91c1c', marginTop: '0.25rem' }}>
+            {imageError}
+          </div>
+        )}
       </div>
 
       <div className="inspector-field">

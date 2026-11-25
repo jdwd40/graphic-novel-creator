@@ -41,6 +41,7 @@ export interface StoryMapBuilderProps {
 function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(story.startNodeId);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const nodes = useMemo(() => storyToFlowNodes(story, selectedNodeId), [story, selectedNodeId]);
   const edges = useMemo(() => storyToFlowEdges(story), [story]);
@@ -50,8 +51,13 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
     (next: Story) => {
       try {
         saveStory(next);
-      } catch {
-        // Keep draft editable in memory while ValidationPanel reports invalid fields.
+        setSaveError(null);
+      } catch (err) {
+        setSaveError(
+          err instanceof Error
+            ? err.message
+            : 'Unable to save story changes to browser storage.',
+        );
       }
       onStoryChange(next);
     },
@@ -231,6 +237,22 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
           )}
         </div>
 
+        {saveError && (
+          <div
+            role="alert"
+            data-testid="story-save-error"
+            style={{
+              background: '#fef2f2',
+              color: '#991b1b',
+              borderBottom: '1px solid #fecaca',
+              padding: '0.5rem 0.75rem',
+              fontSize: '0.85rem',
+            }}
+          >
+            <strong>Save error:</strong> {saveError}
+          </div>
+        )}
+
         <div className="builder-flow-wrap">
           <ReactFlow
             nodes={nodes}
@@ -265,6 +287,7 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
             {selectedNode.kind === 'encounter' ? (
               <EncounterInspector
                 node={selectedNode}
+                storyId={story.id}
                 onUpdate={(nextEncounter) => {
                   const nextExitTargets: Record<string, string | null> = {};
                   for (const exitKey of Object.keys(nextEncounter.exits)) {

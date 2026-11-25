@@ -97,6 +97,14 @@ export function startFight(
     ? [...pattern]
     : selectLoopPattern(pattern, altPattern, playthroughId, encounterId, 0);
 
+  const rb = encounter.ruleBreak ?? null;
+  const unblockableHeavyCountered =
+    rb?.type === 'unblockableHeavyWithoutItem'
+      ? storyState.items.includes(rb.item)
+      : true;
+  const tellsForcedHidden =
+    rb?.type === 'hiddenTellsUntilFlag' ? !storyState.flags[rb.flag] : false;
+
   return {
     enemyHealth,
     enemyMaxHealth: enemyHealth,
@@ -122,6 +130,8 @@ export function startFight(
     allyActions,
     unlockedChoices,
     unlockedExits,
+    unblockableHeavyCountered,
+    tellsForcedHidden,
     releasedHealthFloor: false,
     playthroughId,
     encounterId,
@@ -256,12 +266,38 @@ export function resolveMomentChoice(
     nextEnemyHealth = Math.max(0, nextEnemyHealth + picked.choice.enemyHealthDelta);
   }
 
+  let releasedHealthFloor = state.releasedHealthFloor;
+  if (
+    encounter.ruleBreak?.type === 'healthFloorUntilMoment' &&
+    encounter.ruleBreak.momentIndex === active.index
+  ) {
+    releasedHealthFloor = true;
+  }
+
+  if (
+    encounter.winCondition?.type === 'reachMoment' &&
+    encounter.winCondition.momentIndex === active.index
+  ) {
+    return {
+      state: {
+        ...state,
+        enemyHealth: nextEnemyHealth,
+        releasedHealthFloor,
+        pendingMomentQueue: [],
+        status: 'finished',
+        exitKey: 'victory',
+      },
+      events,
+    };
+  }
+
   if (nextEnemyHealth === 0) {
     events.push({ type: 'enemyDefeated' });
     return {
       state: {
         ...state,
         enemyHealth: 0,
+        releasedHealthFloor,
         pendingMomentQueue: [],
         status: 'finished',
         exitKey: 'victory',
@@ -274,6 +310,7 @@ export function resolveMomentChoice(
     state: {
       ...state,
       enemyHealth: nextEnemyHealth,
+      releasedHealthFloor,
       pendingMomentQueue: remainingQueue,
     },
     events,
@@ -303,6 +340,12 @@ export function advanceBeat(
   } else if (resolved.playerHealth === 0) {
     status = 'finished';
     exitKey = 'defeat';
+  } else if (
+    encounter.winCondition?.type === 'surviveBeats' &&
+    resolved.beatNumber >= encounter.winCondition.beats
+  ) {
+    status = 'finished';
+    exitKey = 'victory';
   } else {
     const phases = encounter.phases ?? [];
     const enteredPhases: number[] = [];
@@ -553,19 +596,32 @@ function computeCellOutcome(
  */
 export function resolveBeat(
   state: FightState,
-  _encounter: Encounter,
+  encounter: Encounter,
   tactic: Tactic,
 ): ResolveBeatResult {
   const events: BeatEvent[] = [];
   const nextBeatNumber = state.beatNumber + 1;
   const wasPendingOpen = state.pendingOpen;
   const movePlayed = getUpcomingMove(state);
-  const { playerDamage, enemyDamage, setsPendingOpen, heavyBlocked } = computeCellOutcome(
+  const { playerDamage, ...cellRest } = computeCellOutcome(
     movePlayed,
     tactic,
     state.playerWeaponDamage,
     state.enemyHit,
   );
+  let { enemyDamage, setsPendingOpen, heavyBlocked } = cellRest;
+
+  // Rule-break: unblockable Heavy without required item
+  if (
+    movePlayed === 'heavy' &&
+    tactic === 'guard' &&
+    encounter.ruleBreak?.type === 'unblockableHeavyWithoutItem' &&
+    state.unblockableHeavyCountered === false
+  ) {
+    enemyDamage = state.enemyHit * 2;
+    setsPendingOpen = false;
+    heavyBlocked = false;
+  }
 
   // Ally acts on the scheduled beat before the player's hit.
   let enemyHealthAfterAlly = state.enemyHealth;
@@ -584,7 +640,14 @@ export function resolveBeat(
 
   // Player's hit lands first (after ally hit).
   const appliedPlayerDamage = enemyHealthAfterAlly > 0 ? playerDamage : 0;
-  const nextEnemyHealth = Math.max(0, enemyHealthAfterAlly - appliedPlayerDamage);
+  let nextEnemyHealth = Math.max(0, enemyHealthAfterAlly - appliedPlayerDamage);
+  if (
+    encounter.ruleBreak?.type === 'healthFloorUntilMoment' &&
+    !state.releasedHealthFloor &&
+    nextEnemyHealth < encounter.ruleBreak.floor
+  ) {
+    nextEnemyHealth = Math.min(state.enemyHealth, encounter.ruleBreak.floor);
+  }
   if (appliedPlayerDamage > 0) {
     events.push({ type: 'playerHit', amount: appliedPlayerDamage, move: movePlayed, tactic });
   }

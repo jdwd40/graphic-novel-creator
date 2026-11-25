@@ -1,5 +1,12 @@
+import { useState } from 'react';
 import { VALID_MOVES } from '../combat/constants';
-import type { BossPhase, Encounter, Move } from '../combat/types';
+import type {
+  BossPhase,
+  BossRuleBreak,
+  Encounter,
+  Move,
+  WinCondition,
+} from '../combat/types';
 
 export interface BossEditorProps {
   encounter: Encounter;
@@ -7,7 +14,10 @@ export interface BossEditorProps {
 }
 
 export function BossEditor({ encounter, onUpdate }: BossEditorProps) {
+  const [ruleBreakWarning, setRuleBreakWarning] = useState<string | null>(null);
   const phases = encounter.phases ?? [];
+  const winCondition: WinCondition = encounter.winCondition ?? { type: 'enemyHealthZero' };
+  const ruleBreak = encounter.ruleBreak ?? null;
 
   const updatePhases = (next: BossPhase[]) => {
     onUpdate({
@@ -29,6 +39,23 @@ export function BossEditor({ encounter, onUpdate }: BossEditorProps) {
         pattern: ['strike', 'heavy'],
       },
     ]);
+  };
+
+  const handleSetRuleBreak = (type: string) => {
+    setRuleBreakWarning(null);
+    if (type === 'none') {
+      onUpdate({ ...encounter, ruleBreak: null });
+      return;
+    }
+    let nextRuleBreak: BossRuleBreak;
+    if (type === 'unblockableHeavyWithoutItem') {
+      nextRuleBreak = { type: 'unblockableHeavyWithoutItem', item: 'iron_key' };
+    } else if (type === 'hiddenTellsUntilFlag') {
+      nextRuleBreak = { type: 'hiddenTellsUntilFlag', flag: 'knows_weakness' };
+    } else {
+      nextRuleBreak = { type: 'healthFloorUntilMoment', floor: 4, momentIndex: 0 };
+    }
+    onUpdate({ ...encounter, ruleBreak: nextRuleBreak });
   };
 
   return (
@@ -146,6 +173,175 @@ export function BossEditor({ encounter, onUpdate }: BossEditorProps) {
         <button type="button" disabled={phases.length >= 2} onClick={handleAddPhase}>
           Add phase
         </button>
+
+        <div className="integration-card">
+          <div className="inspector-field">
+            <label htmlFor="boss-win-condition">Win condition</label>
+            <select
+              id="boss-win-condition"
+              value={winCondition.type}
+              onChange={(e) => {
+                const t = e.target.value as WinCondition['type'];
+                if (t === 'enemyHealthZero') {
+                  onUpdate({ ...encounter, winCondition: { type: 'enemyHealthZero' } });
+                } else if (t === 'surviveBeats') {
+                  onUpdate({ ...encounter, winCondition: { type: 'surviveBeats', beats: 6 } });
+                } else {
+                  onUpdate({ ...encounter, winCondition: { type: 'reachMoment', momentIndex: 0 } });
+                }
+              }}
+            >
+              <option value="enemyHealthZero">Enemy health reaches 0</option>
+              <option value="surviveBeats">Survive N beats</option>
+              <option value="reachMoment">Reach named moment</option>
+            </select>
+          </div>
+
+          {winCondition.type === 'surviveBeats' && (
+            <div className="inspector-field">
+              <label htmlFor="win-survive-beats">Beats to survive</label>
+              <input
+                id="win-survive-beats"
+                type="number"
+                min={1}
+                value={winCondition.beats}
+                onChange={(e) =>
+                  onUpdate({
+                    ...encounter,
+                    winCondition: {
+                      type: 'surviveBeats',
+                      beats: Math.max(1, Number(e.target.value) || 1),
+                    },
+                  })
+                }
+              />
+            </div>
+          )}
+
+          {winCondition.type === 'reachMoment' && (
+            <div className="inspector-field">
+              <label htmlFor="win-moment-index">Moment index (0-based)</label>
+              <input
+                id="win-moment-index"
+                type="number"
+                min={0}
+                value={winCondition.momentIndex}
+                onChange={(e) =>
+                  onUpdate({
+                    ...encounter,
+                    winCondition: {
+                      type: 'reachMoment',
+                      momentIndex: Math.max(0, Number(e.target.value) || 0),
+                    },
+                  })
+                }
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="integration-card">
+          <div className="inspector-field">
+            <label htmlFor="boss-rule-break">Rule-break (at most 1)</label>
+            <select
+              id="boss-rule-break"
+              value={ruleBreak?.type ?? 'none'}
+              onChange={(e) => handleSetRuleBreak(e.target.value)}
+            >
+              <option value="none">None</option>
+              <option value="unblockableHeavyWithoutItem">
+                Unblockable Heavy without item
+              </option>
+              <option value="hiddenTellsUntilFlag">Hidden tells until flag</option>
+              <option value="healthFloorUntilMoment">Health floor until moment</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (ruleBreak) {
+                setRuleBreakWarning('Only one rule-break is allowed per encounter.');
+              } else {
+                handleSetRuleBreak('unblockableHeavyWithoutItem');
+              }
+            }}
+          >
+            Add rule-break
+          </button>
+
+          {ruleBreakWarning && (
+            <p role="alert" style={{ margin: 0, color: '#991b1b', fontSize: '0.8rem' }}>
+              {ruleBreakWarning}
+            </p>
+          )}
+
+          {ruleBreak?.type === 'unblockableHeavyWithoutItem' && (
+            <div className="inspector-field">
+              <label htmlFor="rb-item">Required counter item</label>
+              <input
+                id="rb-item"
+                type="text"
+                value={ruleBreak.item}
+                onChange={(e) =>
+                  onUpdate({
+                    ...encounter,
+                    ruleBreak: { ...ruleBreak, item: e.target.value },
+                  })
+                }
+              />
+            </div>
+          )}
+
+          {ruleBreak?.type === 'hiddenTellsUntilFlag' && (
+            <div className="inspector-field">
+              <label htmlFor="rb-flag">Flag that reveals tells</label>
+              <input
+                id="rb-flag"
+                type="text"
+                value={ruleBreak.flag}
+                onChange={(e) =>
+                  onUpdate({
+                    ...encounter,
+                    ruleBreak: { ...ruleBreak, flag: e.target.value },
+                  })
+                }
+              />
+            </div>
+          )}
+
+          {ruleBreak?.type === 'healthFloorUntilMoment' && (
+            <div className="pattern-editor-row">
+              <input
+                type="number"
+                min={1}
+                aria-label="Rule-break health floor"
+                value={ruleBreak.floor}
+                onChange={(e) =>
+                  onUpdate({
+                    ...encounter,
+                    ruleBreak: { ...ruleBreak, floor: Math.max(1, Number(e.target.value) || 1) },
+                  })
+                }
+              />
+              <input
+                type="number"
+                min={0}
+                aria-label="Rule-break moment index"
+                value={ruleBreak.momentIndex}
+                onChange={(e) =>
+                  onUpdate({
+                    ...encounter,
+                    ruleBreak: {
+                      ...ruleBreak,
+                      momentIndex: Math.max(0, Number(e.target.value) || 0),
+                    },
+                  })
+                }
+              />
+            </div>
+          )}
+        </div>
       </div>
     </details>
   );

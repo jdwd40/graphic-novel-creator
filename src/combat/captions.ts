@@ -116,6 +116,9 @@ export interface TellInfo {
 }
 
 export function getEffectiveClarity(state: FightState, encounter: Encounter): TellClarity {
+  if (state.tellsForcedHidden) {
+    return 'hidden';
+  }
   return state.revealedTells ? 'clear' : encounter.tellClarity;
 }
 

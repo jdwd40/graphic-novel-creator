@@ -214,6 +214,8 @@ export interface FightState {
   allyActions: AllyActionState[];
   unlockedChoices: string[];
   unlockedExits: string[];
+  unblockableHeavyCountered?: boolean;
+  tellsForcedHidden?: boolean;
   releasedHealthFloor: boolean;
   playthroughId: string;
   encounterId: string;

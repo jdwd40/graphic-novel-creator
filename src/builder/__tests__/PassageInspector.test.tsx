@@ -1,11 +1,13 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { StoryPlayer } from '../../player/StoryPlayer';
+import { clearImageStoreForTests } from '../../story/imageStore';
 import { createSeedStory } from '../../story/seed';
 import type { PassageNode, Story } from '../../story/types';
 import { PassageInspector } from '../PassageInspector';
-import { storyToFlowEdges } from '../graphUtils';
+import { StoryMapBuilder } from '../StoryMapBuilder';
+import { storyToFlowEdges, storyToFlowNodes } from '../graphUtils';
 
 function PassageHarness({ initialStory, nodeId }: { initialStory: Story; nodeId: string }) {
   const [story, setStory] = useState<Story>(initialStory);
@@ -32,7 +34,11 @@ function PassageHarness({ initialStory, nodeId }: { initialStory: Story; nodeId:
   );
 }
 
-describe('PassageInspector choice authoring (#42)', () => {
+describe('PassageInspector choice authoring (#42, #43)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    clearImageStoreForTests();
+  });
   it('adds three choices wired to different nodes, reorders them for play mode, and removes orphaned edges cleanly', () => {
     const base = createSeedStory();
     const blankPassage: PassageNode = {
@@ -103,5 +109,59 @@ describe('PassageInspector choice authoring (#42)', () => {
       (b) => b.textContent,
     );
     expect(remainingButtons).toEqual(['Pray at Shrine', 'Challenge Guard']);
+  });
+
+  it('sets passage image shown in play mode, marks endings, sets start passage uniquely, and counts words (#43)', async () => {
+    function BuilderAndPlayerHarness() {
+      const [story, setStory] = useState<Story>(() => createSeedStory());
+      return (
+        <div>
+          <StoryMapBuilder story={story} onStoryChange={setStory} />
+          <div data-testid="start-count">
+            {storyToFlowNodes(story, null).filter((n) => n.data?.isStart).length}
+          </div>
+          <StoryPlayer key={story.startNodeId} story={story} />
+        </div>
+      );
+    }
+
+    render(<BuilderAndPlayerHarness />);
+
+    // Select passage_armory and set it as start
+    fireEvent.click(screen.getByTestId('passage-node-passage_armory'));
+    expect(screen.getByTestId('passage-word-count')).toHaveTextContent(/\d+ words?/);
+
+    fireEvent.change(screen.getByLabelText(/passage text/i), {
+      target: { value: 'One two three four five.' },
+    });
+    expect(screen.getByTestId('passage-word-count')).toHaveTextContent('5 words');
+
+    // Upload a new passage image via ImagePicker
+    const file = new File(
+      ['<svg xmlns="http://www.w3.org/2000/svg"><text>CustomArmory</text></svg>'],
+      'custom-armory.svg',
+      { type: 'image/svg+xml' },
+    );
+    fireEvent.change(screen.getByLabelText(/upload passage image/i), {
+      target: { files: [file] },
+    });
+    await waitFor(() => {
+      expect(screen.getByAltText('Passage image preview')).toBeInTheDocument();
+    });
+
+    // Mark as start -> exactly one Start badge across map, and player opens at Watch Armory
+    fireEvent.click(screen.getByRole('button', { name: /set as start/i }));
+    expect(screen.getByTestId('start-count')).toHaveTextContent('1');
+    expect(screen.getByTestId('passage-node-passage_armory')).toHaveTextContent('Start');
+    expect(screen.getByTestId('passage-node-passage_intro')).not.toHaveTextContent('Start');
+
+    const playImg = screen.getByRole('img', { name: 'Watch Armory' }) as HTMLImageElement;
+    expect(playImg.src).toContain('data:image/svg+xml');
+
+    // Toggle ending -> shows Ending badge on map node and ends story in play mode
+    fireEvent.click(screen.getByLabelText(/this is an ending/i));
+    expect(screen.getByTestId('passage-node-passage_armory')).toHaveTextContent('Ending');
+    expect(screen.getByTestId('passage-ending-badge')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /play again/i })).toBeInTheDocument();
   });
 });

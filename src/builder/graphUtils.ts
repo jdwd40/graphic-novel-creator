@@ -14,7 +14,7 @@ export function storyToFlowNodes(story: Story, selectedNodeId: string | null): B
         type: 'passage',
         position: { ...node.position },
         selected: node.id === selectedNodeId,
-        data: { passage: node },
+        data: { passage: node, isStart: story.startNodeId === node.id },
       };
     }
     return {

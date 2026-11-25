@@ -1,13 +1,23 @@
 import type { PassageChoice, PassageNode, Story } from '../story/types';
+import { ImagePicker } from './ImagePicker';
 
 export interface PassageInspectorProps {
   node: PassageNode;
   story?: Story;
   onUpdate: (nextNode: PassageNode) => void;
+  onSetStart?: (nodeId: string) => void;
 }
 
-export function PassageInspector({ node, story, onUpdate }: PassageInspectorProps) {
+function countWords(text: string): number {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).length;
+}
+
+export function PassageInspector({ node, story, onUpdate, onSetStart }: PassageInspectorProps) {
   const hasRest = Boolean(node.effects?.some((e) => 'rest' in e && e.rest));
+  const isStart = story ? story.startNodeId === node.id : false;
+  const wordCount = countWords(node.text);
 
   const toggleRest = (enabled: boolean) => {
     const existing = (node.effects ?? []).filter((e) => !('rest' in e));
@@ -62,7 +72,19 @@ export function PassageInspector({ node, story, onUpdate }: PassageInspectorProp
 
   return (
     <div className="inspector-form" data-testid="passage-inspector">
-      <h2>{node.title}</h2>
+      <div className="integration-row-head">
+        <h2>{node.title}</h2>
+        {onSetStart && (
+          <button
+            type="button"
+            disabled={isStart}
+            onClick={() => onSetStart(node.id)}
+          >
+            {isStart ? 'Start passage' : 'Set as start'}
+          </button>
+        )}
+      </div>
+
       <div className="inspector-field">
         <label htmlFor="passage-title">Passage title</label>
         <input
@@ -72,15 +94,46 @@ export function PassageInspector({ node, story, onUpdate }: PassageInspectorProp
           onChange={(e) => onUpdate({ ...node, title: e.target.value })}
         />
       </div>
+
+      <ImagePicker
+        label="Passage image"
+        value={node.image}
+        story={story}
+        onChange={(imageId) => onUpdate({ ...node, image: imageId })}
+        testId="passage-image-picker"
+      />
+
       <div className="inspector-field">
-        <label htmlFor="passage-text">Passage text</label>
+        <div className="integration-row-head">
+          <label htmlFor="passage-text">Passage text</label>
+          <span className="inspector-sublabel" data-testid="passage-word-count">
+            {wordCount} {wordCount === 1 ? 'word' : 'words'}
+          </span>
+        </div>
         <textarea
           id="passage-text"
-          rows={4}
+          rows={7}
+          style={{ resize: 'vertical' }}
           value={node.text}
           onChange={(e) => onUpdate({ ...node, text: e.target.value })}
         />
       </div>
+
+      <div className="inspector-checkbox">
+        <input
+          id="passage-ending-toggle"
+          type="checkbox"
+          checked={Boolean(node.isEnding)}
+          onChange={(e) =>
+            onUpdate({
+              ...node,
+              isEnding: e.target.checked,
+            })
+          }
+        />
+        <label htmlFor="passage-ending-toggle">This is an ending</label>
+      </div>
+
       <div className="inspector-checkbox">
         <input
           id="passage-rest-toggle"

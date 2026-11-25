@@ -3,13 +3,14 @@ import type { PassageNode } from '../story/types';
 
 export interface PassageFlowData extends Record<string, unknown> {
   passage: PassageNode;
+  isStart?: boolean;
   selected?: boolean;
 }
 
 export type PassageFlowNode = Node<PassageFlowData, 'passage'>;
 
 export function PassageNodeCard({ data, selected }: NodeProps<PassageFlowNode>) {
-  const { passage } = data;
+  const { passage, isStart } = data;
   return (
     <div
       className={`story-node story-node--passage ${selected ? 'is-selected' : ''}`}
@@ -18,6 +19,7 @@ export function PassageNodeCard({ data, selected }: NodeProps<PassageFlowNode>) 
       <Handle type="target" position={Position.Left} id="in" aria-label="Incoming story link" />
       <div className="story-node__header">
         <span className="story-node__badge">Passage</span>
+        {isStart && <span className="story-node__badge story-node__badge--start">Start</span>}
         {passage.isEnding && <span className="story-node__badge story-node__badge--end">Ending</span>}
       </div>
       <div className="story-node__title">{passage.title}</div>

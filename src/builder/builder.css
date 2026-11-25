@@ -132,6 +132,11 @@
   color: #166534;
 }
 
+.story-node__badge--start {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
 .story-node__title {
   font-weight: 700;
   color: #0f172a;

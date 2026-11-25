@@ -330,6 +330,12 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
                     nodes: { ...story.nodes, [selectedNode.id]: nextPassage },
                   });
                 }}
+                onSetStart={(nodeId) => {
+                  commitStory({
+                    ...story,
+                    startNodeId: nodeId,
+                  });
+                }}
               />
             )}
           </>

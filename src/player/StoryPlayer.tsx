@@ -542,12 +542,19 @@ function PassageView({
         <h2 style={{ margin: '0 0 0.4rem', fontSize: '1.1rem' }}>{node.title}</h2>
         <p style={{ margin: 0 }}>{node.text}</p>
       </div>
-      {visibleChoices.length > 0 ? (
+      {!node.isEnding && visibleChoices.length > 0 ? (
         <ChoiceList choices={visibleChoices} onSelect={onChoice} />
       ) : (
-        <button type="button" className="story-choice-btn" onClick={onRestart}>
-          Play again
-        </button>
+        <div className="story-ending-actions">
+          {node.isEnding && (
+            <span className="story-node__badge story-node__badge--end" data-testid="passage-ending-badge">
+              Ending
+            </span>
+          )}
+          <button type="button" className="story-choice-btn" onClick={onRestart}>
+            Play again
+          </button>
+        </div>
       )}
     </article>
   );

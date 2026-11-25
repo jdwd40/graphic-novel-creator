@@ -5,6 +5,7 @@ import { getArmourBuffer, getEffectiveMaxHealth, getWeaponDamage } from '../comb
 import {
   advanceBeat,
   finishFight,
+  resolveMomentChoice,
   retreatFight,
   startFight,
 } from '../combat/resolver';
@@ -298,6 +299,38 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     completeEncounter(currentNode, step.state);
   };
 
+  const handleSelectMomentChoice = (choiceIndex: number) => {
+    if (!currentNode || currentNode.kind !== 'encounter') return;
+    const active = playthrough.activeFight;
+    if (!active || active.encounterId !== currentNode.id) return;
+
+    const storyState = {
+      flags: playthrough.flags,
+      items: playthrough.items,
+      stats: { ...playthrough.stats, health: playthrough.combat.health },
+    };
+    const step = resolveMomentChoice(
+      active.fight,
+      currentNode.encounter,
+      choiceIndex,
+      storyState,
+    );
+
+    if (step.state.status === 'finished') {
+      completeEncounter(currentNode, step.state);
+      return;
+    }
+
+    updatePlaythrough({
+      ...playthrough,
+      activeFight: {
+        encounterId: currentNode.id,
+        fight: step.state,
+        lastResultCaption: active.lastResultCaption,
+      },
+    });
+  };
+
   const effectiveMax = getEffectiveMaxHealth(playthrough.combat);
 
   return (
@@ -382,6 +415,11 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
         <CombatScreen
           encounter={currentNode.encounter}
           fightState={playthrough.activeFight.fight}
+          storyState={{
+            flags: playthrough.flags,
+            items: playthrough.items,
+            stats: { ...playthrough.stats, health: playthrough.combat.health },
+          }}
           resultCaption={
             playthrough.activeFight.lastResultCaption ||
             resultCaption ||
@@ -391,6 +429,7 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
           onAdvanceBeat={handleAdvanceBeat}
           onSelectTactic={handleSelectTactic}
           onRetreat={handleRetreat}
+          onSelectMomentChoice={handleSelectMomentChoice}
         />
       ) : null}
     </div>

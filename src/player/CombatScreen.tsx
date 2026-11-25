@@ -1,5 +1,14 @@
 import { nextTell } from '../combat/captions';
-import type { Encounter, FightState, Move, Tactic } from '../combat/types';
+import { EMPTY_STORY_STATE } from '../combat/conditions';
+import { getActiveMoment, getAvailableMomentChoices } from '../combat/resolver';
+import type {
+  Encounter,
+  FightState,
+  Move,
+  StoryStateSnapshot,
+  Tactic,
+} from '../combat/types';
+import { ChoiceList } from './ChoiceList';
 import { HealthPips } from './HealthPips';
 import './CombatScreen.css';
 
@@ -15,12 +24,14 @@ export interface CombatFeedbackState {
 export interface CombatScreenProps {
   encounter: Encounter;
   fightState: FightState;
+  storyState?: StoryStateSnapshot;
   resultCaption: string;
   artSrc?: string;
   feedback?: CombatFeedbackState;
   onAdvanceBeat: () => void;
   onSelectTactic: (tactic: Tactic) => void;
   onRetreat: () => void;
+  onSelectMomentChoice?: (choiceIndex: number) => void;
 }
 
 function IntentIcon({ move }: { move: Move }) {
@@ -56,15 +67,21 @@ const TACTIC_OPTIONS: ReadonlyArray<{ value: Tactic; label: string }> = [
 export function CombatScreen({
   encounter,
   fightState,
+  storyState = EMPTY_STORY_STATE,
   resultCaption,
   artSrc,
   feedback,
   onAdvanceBeat,
   onSelectTactic,
   onRetreat,
+  onSelectMomentChoice,
 }: CombatScreenProps) {
   const tell = nextTell(fightState, encounter);
-  const hasOpenMoment = fightState.pendingMomentQueue.length > 0;
+  const activeMoment = getActiveMoment(fightState, encounter);
+  const hasOpenMoment = activeMoment !== null;
+  const availableMomentChoices = activeMoment
+    ? getAvailableMomentChoices(fightState, encounter, storyState)
+    : [];
   const imageSource = artSrc ?? encounter.enemy.image;
 
   return (
@@ -127,36 +144,51 @@ export function CombatScreen({
         </div>
 
         <div className="story-caption-box" data-testid="combat-result-caption">
-          {resultCaption}
+          {activeMoment ? activeMoment.moment.caption : resultCaption}
         </div>
 
-        {tell.caption && (
+        {!hasOpenMoment && tell.caption && (
           <div className="combat-tell-box" data-testid="combat-tell-caption">
             {tell.caption}
           </div>
         )}
       </div>
 
-      <div className="combat-tactic-bar" role="group" aria-label="Combat tactics">
-        {TACTIC_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            className="tactic-btn"
-            aria-pressed={fightState.currentTactic === opt.value}
-            onClick={() => onSelectTactic(opt.value)}
-          >
-            {opt.label}
-          </button>
-        ))}
-        {encounter.allowRetreat && (
-          <button type="button" className="retreat-btn" onClick={onRetreat}>
-            Retreat
-          </button>
-        )}
-      </div>
+      {hasOpenMoment ? (
+        <div data-testid="moment-choices-panel">
+          <ChoiceList
+            ariaLabel="Moment choices"
+            choices={availableMomentChoices.map((c) => ({
+              id: String(c.choiceIndex),
+              label: c.choice.label,
+            }))}
+            onSelect={(id) => onSelectMomentChoice?.(Number(id))}
+          />
+        </div>
+      ) : (
+        <>
+          <div className="combat-tactic-bar" role="group" aria-label="Combat tactics">
+            {TACTIC_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className="tactic-btn"
+                aria-pressed={fightState.currentTactic === opt.value}
+                onClick={() => onSelectTactic(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+            {encounter.allowRetreat && (
+              <button type="button" className="retreat-btn" onClick={onRetreat}>
+                Retreat
+              </button>
+            )}
+          </div>
 
-      <p className="combat-tap-hint">Tap panel or caption to advance one beat</p>
+          <p className="combat-tap-hint">Tap panel or caption to advance one beat</p>
+        </>
+      )}
     </section>
   );
 }

@@ -20,7 +20,7 @@ const TACTIC_ITEMS: ReadonlyArray<{
 function TacticIcon({ tactic }: { tactic: Tactic }) {
   if (tactic === 'press') {
     return (
-      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
         <path
           d="M13 2L4 14h7l-1 8 10-12h-7l0-8z"
           fill="currentColor"
@@ -30,7 +30,7 @@ function TacticIcon({ tactic }: { tactic: Tactic }) {
   }
   if (tactic === 'guard') {
     return (
-      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
         <path
           d="M12 2L4 5v6.2c0 5.1 3.4 9.6 8 10.8 4.6-1.2 8-5.7 8-10.8V5l-8-3z"
           fill="currentColor"
@@ -39,7 +39,7 @@ function TacticIcon({ tactic }: { tactic: Tactic }) {
     );
   }
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="2.5" fill="none" />
       <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" />
     </svg>
@@ -65,7 +65,7 @@ export function TacticBar({
             <button
               key={opt.value}
               type="button"
-              className={`tactic-btn ${selected ? 'is-selected' : ''}`}
+              className={`tactic-btn tactic-btn--${opt.value} ${selected ? 'is-selected' : ''}`}
               aria-label={opt.label}
               aria-pressed={selected}
               onClick={() => onSelectTactic(opt.value)}
@@ -88,6 +88,16 @@ export function TacticBar({
       {allowRetreat && (
         <div className="combat-retreat-slot">
           <button type="button" className="retreat-btn" onClick={onRetreat}>
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M10 5l-7 7 7 7M4 12h11a5 5 0 0 1 5 5v2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             Retreat
           </button>
         </div>

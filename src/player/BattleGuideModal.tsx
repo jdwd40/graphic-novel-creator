@@ -33,6 +33,7 @@ export function BattleGuideModal({ onClose }: BattleGuideModalProps) {
         aria-label="How combat works"
         data-testid="battle-guide-modal"
       >
+        <span className="sheet-grabber" aria-hidden="true" />
         <div className="battle-guide-modal__header">
           <h3>How combat works</h3>
           <button
@@ -71,7 +72,7 @@ export function BattleGuideModal({ onClose }: BattleGuideModalProps) {
           </li>
         </ul>
 
-        <button type="button" className="story-choice-btn battle-guide-done" onClick={onClose}>
+        <button type="button" className="story-choice-btn story-choice-btn--primary battle-guide-done" onClick={onClose}>
           Got it
         </button>
       </div>

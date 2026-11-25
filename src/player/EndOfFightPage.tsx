@@ -68,9 +68,9 @@ export function EndOfFightPage({
       aria-label={`${encounter.enemy.name} — ${outcomeHeading}`}
       data-testid="end-of-fight-page"
     >
-      <header className="story-caption-box end-of-fight-header">
+      <header className={`story-caption-box end-of-fight-header end-of-fight-header--${exitKey}`}>
         <div className="end-of-fight-header__top">
-          <span className={`story-node__badge end-of-fight-badge--${exitKey}`}>
+          <span className={`story-node__badge end-of-fight-badge end-of-fight-badge--${exitKey}`}>
             {outcomeHeading}
           </span>
           <h2 className="page-heading-focus" tabIndex={-1} data-page-heading>
@@ -155,7 +155,7 @@ export function EndOfFightPage({
 
       <button
         type="button"
-        className="story-choice-btn end-of-fight-continue"
+        className="story-choice-btn story-choice-btn--primary end-of-fight-continue"
         onClick={onContinue}
       >
         Continue

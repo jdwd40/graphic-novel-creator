@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { PlayerCombatState } from '../combat/types';
 import type { ItemDefinition, Story } from '../story/types';
+import { makeFallbackArt } from '../story/artwork';
 import { useImageUrl } from '../story/useImageUrl';
 
 export interface SatchelSheetProps {
@@ -45,12 +46,8 @@ function ItemArt({
       className={`${className} satchel-placeholder`}
       data-testid={`satchel-placeholder-${itemId}`}
       aria-hidden="true"
-    >
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="4" y="6" width="16" height="14" rx="2" />
-        <path d="M9 6V4a3 3 0 0 1 6 0v2" />
-      </svg>
-    </div>
+      style={{ backgroundImage: `url("${makeFallbackArt(name, 'item')}")` }}
+    />
   );
 }
 
@@ -104,11 +101,12 @@ export function SatchelSheet({
         aria-label="Satchel"
         data-testid="satchel-sheet"
       >
+        <span className="sheet-grabber" aria-hidden="true" />
         <div className="satchel-sheet__header">
           <h2>Satchel</h2>
           <button
             type="button"
-            className="reader-hud__btn"
+            className="satchel-sheet__close"
             aria-label="Close satchel sheet"
             onClick={onClose}
           >

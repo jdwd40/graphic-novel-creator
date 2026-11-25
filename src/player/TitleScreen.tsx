@@ -30,7 +30,9 @@ export function TitleScreen({
             className="title-screen__cover-img"
             data-testid="title-cover-img"
           />
+          <span className="art-fx" aria-hidden="true" />
           <div className="title-screen__title-overlay">
+            <span className="title-screen__eyebrow">An Interactive Graphic Novel</span>
             <h1 className="title-screen__heading">{story.title}</h1>
           </div>
         </div>
@@ -47,7 +49,7 @@ export function TitleScreen({
         {hasSave && (
           <button
             type="button"
-            className="story-choice-btn title-screen__continue-btn"
+            className="story-choice-btn story-choice-btn--primary title-screen__continue-btn"
             onClick={onContinue}
           >
             Continue
@@ -57,7 +59,7 @@ export function TitleScreen({
         {!confirmOverwrite ? (
           <button
             type="button"
-            className="story-choice-btn"
+            className={`story-choice-btn ${hasSave ? '' : 'story-choice-btn--primary'}`.trim()}
             onClick={() => {
               if (hasSave) {
                 setConfirmOverwrite(true);
@@ -100,7 +102,7 @@ export function TitleScreen({
         {onExitToBuilder && (
           <button
             type="button"
-            className="reader-menu__btn"
+            className="reader-menu__btn title-screen__exit-btn"
             onClick={onExitToBuilder}
           >
             Exit to builder

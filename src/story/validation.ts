@@ -90,13 +90,41 @@ function validateEncounterNode(node: EncounterNode, story: Story): ValidationMes
   return messages;
 }
 
+function storyHasRestEffect(story: Story): boolean {
+  for (const node of Object.values(story.nodes)) {
+    if (node.kind === 'passage') {
+      if (node.effects?.some((e) => 'rest' in e && e.rest)) return true;
+      for (const choice of node.choices) {
+        if (choice.effects?.some((e) => 'rest' in e && e.rest)) return true;
+      }
+    } else {
+      for (const exitCfg of Object.values(node.encounter.exits)) {
+        if (exitCfg.effects.some((e) => 'rest' in e && e.rest)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function validateStory(story: Story): ValidationMessage[] {
   const messages: ValidationMessage[] = [];
+  let encounterCount = 0;
 
   for (const node of Object.values(story.nodes)) {
     if (node.kind === 'encounter') {
+      encounterCount += 1;
       messages.push(...validateEncounterNode(node, story));
     }
+  }
+
+  if (encounterCount >= 2 && !storyHasRestEffect(story)) {
+    messages.push({
+      id: `${story.id}:missing-rest-effect`,
+      nodeId: story.startNodeId,
+      severity: 'warning',
+      message:
+        'Story has two or more encounters and no rest effect; readers may starve of health.',
+    });
   }
 
   return messages;

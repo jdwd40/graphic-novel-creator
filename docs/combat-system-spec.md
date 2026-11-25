@@ -61,7 +61,7 @@ Equipment has one number per item and three tiers. The names are examples; creat
 | 3 | Masterwork Sword, Plasma Pistol | 4 | Plate | 6 |
 
 - **Armour is a buffer, not damage reduction.** It absorbs damage before health and refills after every fight. Subtracting armour from attack creates cliffs, where one tier turns a fight from deadly to harmless.
-- **Health damage is lasting.** Anything that gets past the buffer stays until the story heals it, which separates scuffed from hurt.
+- **Health damage is lasting.** Anything that gets past the buffer stays until the story heals it, which separates scuffed from hurt. Stories may use a standard `rest` effect to restore health up to the player's current effective maximum (accounting for wounds), and the builder warns when a story has two or more encounters without one.
 - **No equipment management.** One weapon and one armour are equipped. Picking up a better one equips it and shows the change, for example "Steel Sword, damage 3 (was 2)".
 - **Bare hands.** With no weapon, damage is 1. With no armour, the buffer is 0.
 
@@ -296,7 +296,7 @@ Six decisions are still open:
 
 - [x] **Confirmed (Issue #2):** Armour stays a per-fight buffer (tiers 2, 4, and 6 pips) that absorbs damage before health and refills after every fight.
 - [x] **Confirmed (Issue #11):** No beat cap for now. Simulations across all nine Weak/Standard/Tough preset combinations at tier 1 show careful play wins faster everywhere (3–6 beats vs 6–12) and loses equal or less health in 8 of 9 matchups (Tough Brute is the sole 1 HP trade-off at 9 beats vs 6).
-- [ ] Health only returns through story effects. Decide whether the app should offer a standard "rest" effect so creators do not starve readers by accident.
+- [x] **Confirmed (Issue #28):** Added a standard `rest` effect that restores health to current effective maximum (respecting wounds) plus a builder validation hint when a story has two or more encounters and no `rest` effect. Automatic recovery was avoided.
 - [x] **Confirmed (Issue #3):** Retreat costs one free enemy Strike (resolved as if on Steady); if that Strike takes the player to 0 health, the fight leaves by Defeat. Per-encounter pricing is deferred until creators ask for it.
 - [x] **Confirmed (Issue #17):** Ship exact pips for enemy health so readers can judge when Press is worth the risk. Revisit a described state as a future boss rule-break rather than a global setting.
 - [ ] Boss numbers and the three rule-breaks need a simulation pass before they are offered to creators.

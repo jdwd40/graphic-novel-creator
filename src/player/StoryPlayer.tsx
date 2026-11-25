@@ -162,6 +162,11 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
       return;
     }
 
+    const targetNode = story.nodes[choice.targetNodeId];
+    if (targetNode.kind === 'passage' && targetNode.effects && targetNode.effects.length > 0) {
+      next = applyStoryEffects(next, story, targetNode.effects);
+    }
+
     setUnwiredNotice(null);
     updatePlaythrough({
       ...next,

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { selectResultCaption } from '../combat/captions';
+import { useCallback, useEffect, useState } from 'react';
+import { nextTell, selectResultCaption } from '../combat/captions';
 import { getArmourBuffer, getEffectiveMaxHealth, getWeaponDamage } from '../combat/playerState';
 import {
   advanceBeat,
@@ -15,6 +15,12 @@ import {
   savePlaythrough,
   type PlaythroughState,
 } from '../story/playthrough';
+import {
+  computeAutoAdvanceDelay,
+  loadReaderSettings,
+  saveReaderSettings,
+  type ReaderSettings,
+} from '../story/settings';
 import type { EncounterNode, PassageNode, Story } from '../story/types';
 import { ChoiceList } from './ChoiceList';
 import { CombatScreen, type CombatFeedbackState } from './CombatScreen';
@@ -79,6 +85,10 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
   const [resultCaption, setResultCaption] = useState<string>('');
   const [showInventory, setShowInventory] = useState(false);
   const [feedback, setFeedback] = useState<CombatFeedbackState | undefined>(undefined);
+  const [readerSettings, setReaderSettings] = useState<ReaderSettings>(() =>
+    loadReaderSettings(),
+  );
+  const [tacticTouchCount, setTacticTouchCount] = useState(0);
 
   const currentNode = story.nodes[playthrough.currentNodeId];
 
@@ -112,9 +122,15 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     setResultCaption(`${currentNode.encounter.enemy.name} bars your path.`);
   }, [currentNode, playthrough]);
 
-  const updatePlaythrough = (next: PlaythroughState) => {
+  const updatePlaythrough = useCallback((next: PlaythroughState) => {
     savePlaythrough(next);
     setPlaythrough(next);
+  }, []);
+
+  const handleToggleAutoAdvance = (checked: boolean) => {
+    const nextSettings: ReaderSettings = { ...readerSettings, autoAdvance: checked };
+    saveReaderSettings(nextSettings);
+    setReaderSettings(nextSettings);
   };
 
   const handleRestart = () => {
@@ -147,29 +163,30 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     });
   };
 
-  const completeEncounter = (
-    encounterNode: EncounterNode,
-    finishedFight: FightState,
-  ) => {
-    const { nextPlaythrough, targetNodeId } = applyFightOutcomeToPlaythrough(
-      playthrough,
-      story,
-      encounterNode,
-      finishedFight,
-    );
-    updatePlaythrough(nextPlaythrough);
-    if (!targetNodeId) {
-      setUnwiredNotice('This path is not written yet');
-    } else {
-      setUnwiredNotice(null);
-    }
-  };
+  const completeEncounter = useCallback(
+    (encounterNode: EncounterNode, finishedFight: FightState) => {
+      const { nextPlaythrough, targetNodeId } = applyFightOutcomeToPlaythrough(
+        playthrough,
+        story,
+        encounterNode,
+        finishedFight,
+      );
+      updatePlaythrough(nextPlaythrough);
+      if (!targetNodeId) {
+        setUnwiredNotice('This path is not written yet');
+      } else {
+        setUnwiredNotice(null);
+      }
+    },
+    [playthrough, story, updatePlaythrough],
+  );
 
   const handleSelectTactic = (tactic: Tactic) => {
     if (!currentNode || currentNode.kind !== 'encounter') return;
     const active = playthrough.activeFight;
     if (!active || active.encounterId !== currentNode.id) return;
 
+    setTacticTouchCount((c) => c + 1);
     const updatedFight: FightState = {
       ...active.fight,
       currentTactic: tactic,
@@ -184,10 +201,11 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     });
   };
 
-  const handleAdvanceBeat = () => {
+  const handleAdvanceBeat = useCallback(() => {
     if (!currentNode || currentNode.kind !== 'encounter') return;
     const active = playthrough.activeFight;
     if (!active || active.encounterId !== currentNode.id) return;
+    if (active.fight.pendingMomentQueue.length > 0) return;
 
     const step = advanceBeat(
       active.fight,
@@ -224,7 +242,37 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
         lastResultCaption: caption,
       },
     });
-  };
+  }, [completeEncounter, currentNode, playthrough, updatePlaythrough]);
+
+  // Auto-advance timer when reader setting is enabled.
+  useEffect(() => {
+    if (!readerSettings.autoAdvance) return;
+    if (!currentNode || currentNode.kind !== 'encounter') return;
+    const active = playthrough.activeFight;
+    if (!active || active.encounterId !== currentNode.id) return;
+    if (active.fight.status !== 'ongoing' || active.fight.pendingMomentQueue.length > 0) {
+      return;
+    }
+
+    const activeCaption =
+      active.lastResultCaption ||
+      resultCaption ||
+      `${currentNode.encounter.enemy.name} bars your path.`;
+    const tell = nextTell(active.fight, currentNode.encounter);
+    const delayMs = computeAutoAdvanceDelay(activeCaption, tell.caption);
+
+    const timer = window.setTimeout(() => {
+      handleAdvanceBeat();
+    }, delayMs);
+    return () => window.clearTimeout(timer);
+  }, [
+    currentNode,
+    handleAdvanceBeat,
+    playthrough.activeFight,
+    readerSettings.autoAdvance,
+    resultCaption,
+    tacticTouchCount,
+  ]);
 
   const handleRetreat = () => {
     if (!currentNode || currentNode.kind !== 'encounter') return;
@@ -245,6 +293,14 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
         </span>
         <span>Weapon: {getWeaponDamage(playthrough.combat)} dmg</span>
         <span>Armour: {getArmourBuffer(playthrough.combat)} buf</span>
+        <label className="auto-advance-toggle">
+          <input
+            type="checkbox"
+            checked={readerSettings.autoAdvance}
+            onChange={(e) => handleToggleAutoAdvance(e.target.checked)}
+          />
+          Auto-advance
+        </label>
         <button type="button" onClick={() => setShowInventory((v) => !v)}>
           {showInventory ? 'Hide gear' : 'Gear & wounds'}
         </button>

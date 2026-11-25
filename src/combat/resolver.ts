@@ -377,10 +377,12 @@ export function finishFight(
 ): FightResult {
   const exitKey: ExitKey = overrideExitKey ?? state.exitKey ?? 'victory';
   const healthLost = Math.max(0, state.playerStartingHealth - state.playerHealth);
-  const healthAfter = exitKey === 'defeat' ? 1 : state.playerHealth;
   const exitEffects = encounter.exits[exitKey]?.effects
     ? [...encounter.exits[exitKey].effects]
     : [];
+  const hasChangeHealth = exitEffects.some((e) => 'changeHealth' in e);
+  const healthAfter =
+    exitKey === 'defeat' ? (hasChangeHealth ? 0 : 1) : state.playerHealth;
 
   return {
     exitKey,

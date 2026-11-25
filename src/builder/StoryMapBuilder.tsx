@@ -26,6 +26,7 @@ import { PassageNodeCard } from './PassageNodeCard';
 import { PlayFromHereModal } from './PlayFromHereModal';
 import { StorySettingsPanel } from './StorySettingsPanel';
 import { ValidationPanel } from './ValidationPanel';
+import { useStoryHistory } from './useStoryHistory';
 import {
   createAndLinkNodeFromHandle,
   createDefaultEncounterNode,
@@ -34,6 +35,36 @@ import {
   storyToFlowNodes,
 } from './graphUtils';
 import './builder.css';
+
+export function countNodeConnections(story: Story, nodeId: string): number {
+  const node = story.nodes[nodeId];
+  if (!node) return 0;
+  let count = 0;
+
+  if (node.kind === 'passage') {
+    for (const c of node.choices) {
+      if (c.targetNodeId && story.nodes[c.targetNodeId]) count += 1;
+    }
+  } else {
+    for (const target of Object.values(node.exitTargets)) {
+      if (target && story.nodes[target]) count += 1;
+    }
+  }
+
+  for (const other of Object.values(story.nodes)) {
+    if (other.id === nodeId) continue;
+    if (other.kind === 'passage') {
+      for (const c of other.choices) {
+        if (c.targetNodeId === nodeId) count += 1;
+      }
+    } else {
+      for (const target of Object.values(other.exitTargets)) {
+        if (target === nodeId) count += 1;
+      }
+    }
+  }
+  return count;
+}
 
 const nodeTypes = {
   passage: PassageNodeCard,
@@ -72,6 +103,8 @@ function BuilderInner({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [dropMenu, setDropMenu] = useState<DropMenuState | null>(null);
   const [playFromHereOpen, setPlayFromHereOpen] = useState(false);
+  const [pendingDeleteNodeId, setPendingDeleteNodeId] = useState<string | null>(null);
+  const history = useStoryHistory(story.id);
 
   useEffect(() => {
     if (initialSelectedNodeId && story.nodes[initialSelectedNodeId]) {
@@ -89,7 +122,10 @@ function BuilderInner({
   const validationMessages = useMemo(() => validateStory(story), [story]);
 
   const commitStory = useCallback(
-    (next: Story) => {
+    (next: Story, options?: { coalesceKey?: string; skipHistory?: boolean }) => {
+      if (!options?.skipHistory) {
+        history.pushChange(story, options?.coalesceKey);
+      }
       try {
         saveStory(next);
         setSaveError(null);
@@ -102,8 +138,50 @@ function BuilderInner({
       }
       onStoryChange(next);
     },
-    [onStoryChange],
+    [history, onStoryChange, story],
   );
+
+  const handleUndo = useCallback(() => {
+    const restored = history.undo(story);
+    if (!restored) return;
+    setPendingDeleteNodeId(null);
+    setDropMenu(null);
+    if (selectedNodeId && !restored.nodes[selectedNodeId]) {
+      setSelectedNodeId(restored.startNodeId);
+    }
+    commitStory(restored, { skipHistory: true });
+  }, [commitStory, history, selectedNodeId, story]);
+
+  const handleRedo = useCallback(() => {
+    const restored = history.redo(story);
+    if (!restored) return;
+    setPendingDeleteNodeId(null);
+    setDropMenu(null);
+    if (selectedNodeId && !restored.nodes[selectedNodeId]) {
+      setSelectedNodeId(restored.startNodeId);
+    }
+    commitStory(restored, { skipHistory: true });
+  }, [commitStory, history, selectedNodeId, story]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      if (key === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        handleUndo();
+      } else if ((key === 'z' && event.shiftKey) || key === 'y') {
+        event.preventDefault();
+        handleRedo();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleRedo, handleUndo]);
 
   const focusNode = useCallback(
     (nodeId: string) => {
@@ -370,11 +448,20 @@ function BuilderInner({
     setSelectedNodeId(id);
   };
 
-  const handleDeleteSelected = () => {
-    if (!selectedNodeId || selectedNodeId === story.startNodeId) return;
-    const next = deleteNode(story, selectedNodeId);
+  const performDeleteNode = (nodeId: string) => {
+    const next = deleteNode(story, nodeId);
+    setPendingDeleteNodeId(null);
     setSelectedNodeId(story.startNodeId);
     commitStory(next);
+  };
+
+  const handleDeleteSelected = () => {
+    if (!selectedNodeId || selectedNodeId === story.startNodeId) return;
+    if (countNodeConnections(story, selectedNodeId) > 0) {
+      setPendingDeleteNodeId(selectedNodeId);
+      return;
+    }
+    performDeleteNode(selectedNodeId);
   };
 
   const selectedNode = selectedNodeId ? story.nodes[selectedNodeId] ?? null : null;
@@ -399,6 +486,20 @@ function BuilderInner({
           </button>
           <button
             type="button"
+            disabled={!history.canUndo}
+            onClick={handleUndo}
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            disabled={!history.canRedo}
+            onClick={handleRedo}
+          >
+            Redo
+          </button>
+          <button
+            type="button"
             aria-pressed={sideTab === 'items'}
             onClick={() => setSideTab((t) => (t === 'items' ? 'inspector' : 'items'))}
           >
@@ -419,6 +520,31 @@ function BuilderInner({
             Story settings
           </button>
         </div>
+
+        {pendingDeleteNodeId && story.nodes[pendingDeleteNodeId] && (
+          <div
+            role="alertdialog"
+            aria-label="Confirm node deletion"
+            className="builder-confirm-bar"
+            data-testid="confirm-delete-node-dialog"
+          >
+            <span>
+              Delete connected node &ldquo;{story.nodes[pendingDeleteNodeId].title}&rdquo; and unlink its edges?
+            </span>
+            <div className="builder-confirm-bar__actions">
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={() => performDeleteNode(pendingDeleteNodeId)}
+              >
+                Confirm delete
+              </button>
+              <button type="button" onClick={() => setPendingDeleteNodeId(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {saveError && (
           <div
@@ -523,12 +649,15 @@ function BuilderInner({
         {sideTab === 'images' ? (
           <ImageLibraryPanel story={story} />
         ) : sideTab === 'settings' ? (
-          <StorySettingsPanel story={story} onUpdateStory={commitStory} />
+          <StorySettingsPanel
+            story={story}
+            onUpdateStory={(next) => commitStory(next, { coalesceKey: 'settings-edit' })}
+          />
         ) : sideTab === 'items' ? (
           <ItemsPanel
             story={story}
             initialItemId={selectedItemId}
-            onUpdateStory={commitStory}
+            onUpdateStory={(next) => commitStory(next, { coalesceKey: 'items-edit' })}
           />
         ) : selectedNode ? (
           <>
@@ -586,7 +715,7 @@ function BuilderInner({
                       },
                     },
                   };
-                  commitStory(next);
+                  commitStory(next, { coalesceKey: `encounter-edit-${selectedNode.id}` });
                 }}
               />
             ) : (
@@ -595,10 +724,13 @@ function BuilderInner({
                 node={selectedNode}
                 story={story}
                 onUpdate={(nextPassage) => {
-                  commitStory({
-                    ...story,
-                    nodes: { ...story.nodes, [selectedNode.id]: nextPassage },
-                  });
+                  commitStory(
+                    {
+                      ...story,
+                      nodes: { ...story.nodes, [selectedNode.id]: nextPassage },
+                    },
+                    { coalesceKey: `passage-edit-${selectedNode.id}` },
+                  );
                 }}
                 onSetStart={(nodeId) => {
                   commitStory({

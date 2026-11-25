@@ -98,6 +98,7 @@ describe('StoryMapBuilder encounter nodes', () => {
     expect(screen.getByRole('heading', { name: /Gatehouse Guard/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /delete selected/i }));
+    fireEvent.click(screen.getByRole('button', { name: /confirm delete/i }));
     expect(story.nodes.enc_gatehouse).toBeUndefined();
   });
 });

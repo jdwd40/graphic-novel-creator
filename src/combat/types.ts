@@ -180,6 +180,7 @@ export type BeatLogEntry =
       image: string;
       resultCaption: string;
       tellCaption: string | null;
+      sfxText?: string;
     }
   | {
       kind: 'moment';

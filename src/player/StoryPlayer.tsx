@@ -284,6 +284,12 @@ export function StoryPlayer({
       .map((e) => e.caption!);
     const caption = allyCaptions.length > 0 ? `${allyCaptions.join(' ')} ${baseCaption}` : baseCaption;
 
+    const fb = deriveHitFeedback(
+      active.fight,
+      step.state,
+      step.events,
+      active.fight.currentTactic,
+    );
     const moveEvent = step.events.find((e) => e.type === 'enemyMove');
     const logEntry: BeatLogEntry = {
       kind: 'beat',
@@ -293,6 +299,7 @@ export function StoryPlayer({
       image: artBefore,
       resultCaption: caption,
       tellCaption: tellBefore.caption,
+      sfxText: fb.sfxText ?? undefined,
     };
     const nextFight: FightState = {
       ...step.state,
@@ -300,16 +307,7 @@ export function StoryPlayer({
     };
 
     setResultCaption(caption);
-    setFeedback(
-      nextFight.status === 'finished'
-        ? undefined
-        : deriveHitFeedback(
-          active.fight,
-          nextFight,
-          step.events,
-          active.fight.currentTactic,
-        ),
-    );
+    setFeedback(nextFight.status === 'finished' ? undefined : fb);
 
     updatePlaythrough({
       ...playthrough,
@@ -375,6 +373,7 @@ export function StoryPlayer({
       image: artBefore,
       resultCaption: caption,
       tellCaption: tellBefore.caption,
+      sfxText: 'RETREAT!',
     };
     const nextFight: FightState = {
       ...step.state,
@@ -604,6 +603,21 @@ export function StoryPlayer({
             <EndOfFightPage
               encounter={currentNode.encounter}
               fightState={playthrough.activeFight.fight}
+              outcomeSummary={(() => {
+                const outcome = finishFight(playthrough.activeFight.fight, currentNode.encounter);
+                const woundsGained: string[] = [];
+                const itemsGained: string[] = [];
+                const itemsLost: string[] = [];
+                for (const eff of outcome.exitEffects) {
+                  if ('addWound' in eff) woundsGained.push(eff.addWound);
+                  else if ('addItem' in eff) {
+                    itemsGained.push(story.items?.[eff.addItem]?.name ?? eff.addItem);
+                  } else if ('removeItem' in eff) {
+                    itemsLost.push(story.items?.[eff.removeItem]?.name ?? eff.removeItem);
+                  }
+                }
+                return { woundsGained, itemsGained, itemsLost };
+              })()}
               onContinue={() =>
                 completeEncounter(currentNode, playthrough.activeFight!.fight)
               }

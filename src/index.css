@@ -42,3 +42,52 @@ body {
   flex: 1;
   padding: 1.5rem;
 }
+
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.app-nav button {
+  cursor: pointer;
+  border: 1px solid #d49a2a;
+  background: transparent;
+  color: #f8f6f0;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-weight: 600;
+}
+
+.app-nav button.is-active {
+  background: #d49a2a;
+  color: #16181d;
+}
+
+.player-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.player-status-bar button {
+  margin-left: auto;
+  cursor: pointer;
+  border: 1px solid #475569;
+  background: #f8fafc;
+  color: #0f172a;
+  border-radius: 5px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.player-status-bar button + button {
+  margin-left: 0;
+}

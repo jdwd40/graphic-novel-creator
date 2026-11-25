@@ -9,6 +9,7 @@ The combat system in [combat-system-spec.md](combat-system-spec.md) is built in 
 - **Engine before interface.** Milestones 1 and 2 produce a resolver and a simulation runner that need no user interface or database. Every later milestone calls them.
 - **The spec's balance table is the regression suite.** The five simulated results in the simulation ticket must keep passing. If one changes, either the engine or the spec is wrong.
 - **Each milestone is usable on its own.** After milestone 3 a creator can build a fight. After milestone 4 a reader can play one. Milestones 5 and 6 add depth, not prerequisites.
+- **Built with AI coding tools.** The code is written by AI and directed by one person. Each ticket's scope and acceptance criteria are written to be handed over as a prompt and checked as tests, so that person's time goes on reviewing, deciding, integrating and playtesting.
 - **Decisions are tickets.** The spec's open questions are filed as issues labelled `decision`, each with options and a recommendation, and placed in the milestone they affect.
 
 ## Assumptions
@@ -20,17 +21,19 @@ The combat system in [combat-system-spec.md](combat-system-spec.md) is built in 
 
 ## Milestones
 
-| Milestone | Done when | Tickets | Rough days |
-| --- | --- | --- | --- |
-| [M0 Foundations](https://github.com/jdwd40/graphic-novel-creator/milestone/1) | The app code and a test runner are in the repository. | 1 | 1 |
-| [M1 Combat engine](https://github.com/jdwd40/graphic-novel-creator/milestone/2) | A pure, tested resolver that can play any fight from the spec without a user interface. | 7 | 4 |
-| [M2 Balance preview](https://github.com/jdwd40/graphic-novel-creator/milestone/3) | Autopilot and careful readers can be simulated for any encounter and shown to a creator. | 3 | 2 |
-| [M3 Encounter node in the builder](https://github.com/jdwd40/graphic-novel-creator/milestone/4) | A creator can add an encounter to the story map, configure it with three fields and wire its exits. | 5 | 4 |
-| [M4 Combat screen](https://github.com/jdwd40/graphic-novel-creator/milestone/5) | A reader can play a fight on a phone and leave by the correct exit. | 7 | 4.5 |
-| [M5 Modifiers and moments](https://github.com/jdwd40/graphic-novel-creator/milestone/6) | Story flags, items and choices change fights, and fights change the story. | 7 | 6.5 |
-| [M6 Bosses and polish](https://github.com/jdwd40/graphic-novel-creator/milestone/7) | Boss fights with phases, art variants and the end-of-fight page. | 5 | 5.5 |
+| Milestone | Done when | Tickets | Your days, AI-assisted | Where your time goes |
+| --- | --- | --- | --- | --- |
+| [M0 Foundations](https://github.com/jdwd40/graphic-novel-creator/milestone/1) | The app code and a test runner are in the repository. | 1 | 0.5 | Getting the app into the repository and checking it runs |
+| [M1 Combat engine](https://github.com/jdwd40/graphic-novel-creator/milestone/2) | A pure, tested resolver that can play any fight from the spec without a user interface. | 7 | 1 | Reviewing the resolver against the resolution table |
+| [M2 Balance preview](https://github.com/jdwd40/graphic-novel-creator/milestone/3) | Autopilot and careful readers can be simulated for any encounter and shown to a creator. | 3 | 0.5 to 1 | Checking the simulated results match the spec |
+| [M3 Encounter node in the builder](https://github.com/jdwd40/graphic-novel-creator/milestone/4) | A creator can add an encounter to the story map, configure it with three fields and wire its exits. | 5 | 1.5 to 2 | Fitting generated code to the app's real schema and story map |
+| [M4 Combat screen](https://github.com/jdwd40/graphic-novel-creator/milestone/5) | A reader can play a fight on a phone and leave by the correct exit. | 7 | 2 to 3 | Playtesting on a phone and iterating on feel |
+| [M5 Modifiers and moments](https://github.com/jdwd40/graphic-novel-creator/milestone/6) | Story flags, items and choices change fights, and fights change the story. | 7 | 1.5 to 2.5 | Using the editor as a creator would and fixing what is awkward |
+| [M6 Bosses and polish](https://github.com/jdwd40/graphic-novel-creator/milestone/7) | Boss fights with phases, art variants and the end-of-fight page. | 5 | 1.5 to 2.5 | Tuning boss numbers and judging the art changes |
 
-Sizes are rough estimates for one developer: S is up to half a day, M is about a day, L is two to three days. With 11 small, 17 medium and 2 large tickets, the work totals roughly 28 working days, not counting decisions, review or art.
+The day figures are rough guesses at one person's time when AI writes the code, and total roughly 8 to 12 days. They are not measured from anything, and they exclude the five decisions and any art.
+
+Ticket sizes compare tickets with each other and are not time estimates. S is one focused change, M touches several files or needs careful tests, and L spans the engine, the builder and the player or has a large interface. There are 11 small, 17 medium and 2 large tickets.
 
 ## Order of work
 

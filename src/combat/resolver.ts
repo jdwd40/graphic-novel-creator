@@ -1,14 +1,167 @@
+import { BARE_HANDS_DAMAGE, NO_ARMOUR_BUFFER } from './constants';
 import type {
   BeatEvent,
   Encounter,
+  ExitKey,
+  FightResult,
   FightState,
   Move,
+  PlayerCombatState,
   Tactic,
 } from './types';
+
+export interface StartFightOptions {
+  playthroughId?: string;
+  encounterId?: string;
+}
 
 export interface ResolveBeatResult {
   state: FightState;
   events: BeatEvent[];
+}
+
+export function startFight(
+  encounter: Encounter,
+  player: PlayerCombatState,
+  options: StartFightOptions = {},
+): FightState {
+  const playerBuffer = player.armour?.buffer ?? NO_ARMOUR_BUFFER;
+  const playerWeaponDamage = player.weapon?.damage ?? BARE_HANDS_DAMAGE;
+  const pattern = [...encounter.pattern];
+  const altPattern = encounter.altPattern ? [...encounter.altPattern] : null;
+
+  return {
+    enemyHealth: encounter.enemy.health,
+    enemyMaxHealth: encounter.enemy.health,
+    enemyHit: encounter.enemy.hit,
+    playerHealth: player.health,
+    playerMaxHealth: player.maxHealth,
+    playerStartingHealth: player.health,
+    playerBuffer,
+    playerMaxBuffer: playerBuffer,
+    playerWeaponDamage,
+    beatNumber: 0,
+    pattern,
+    altPattern,
+    activePattern: [...pattern],
+    patternIndex: 0,
+    loopCount: 0,
+    phase: 0,
+    currentTactic: 'steady',
+    pendingOpen: false,
+    firedMoments: [],
+    pendingMomentQueue: [],
+    revealedTells: false,
+    allyActions: [],
+    unlockedChoices: [],
+    unlockedExits: [],
+    releasedHealthFloor: false,
+    playthroughId: options.playthroughId ?? 'default-playthrough',
+    encounterId: options.encounterId ?? 'default-encounter',
+    status: 'ongoing',
+    exitKey: null,
+    beatLog: [],
+  };
+}
+
+export function advanceBeat(
+  state: FightState,
+  encounter: Encounter,
+  tactic: Tactic = state.currentTactic,
+): ResolveBeatResult {
+  if (state.status === 'finished') {
+    throw new Error('Cannot advance a fight that has already finished.');
+  }
+
+  const { state: resolved, events } = resolveBeat(state, encounter, tactic);
+  let status: FightState['status'] = resolved.status;
+  let exitKey: ExitKey | null = resolved.exitKey;
+
+  if (resolved.enemyHealth === 0) {
+    status = 'finished';
+    exitKey = 'victory';
+  } else if (resolved.playerHealth === 0) {
+    status = 'finished';
+    exitKey = 'defeat';
+  }
+
+  return {
+    state: {
+      ...resolved,
+      status,
+      exitKey,
+    },
+    events,
+  };
+}
+
+export function retreatFight(
+  state: FightState,
+  encounter: Encounter,
+): ResolveBeatResult {
+  if (!encounter.allowRetreat) {
+    throw new Error('Retreat is disabled for this encounter.');
+  }
+  if (state.status === 'finished') {
+    throw new Error('Cannot retreat from a fight that has already finished.');
+  }
+
+  const events: BeatEvent[] = [];
+  const dmg = applyIncomingDamage(state.playerBuffer, state.playerHealth, state.enemyHit);
+
+  if (dmg.bufferAbsorbed > 0) {
+    events.push({ type: 'bufferAbsorbed', amount: dmg.bufferAbsorbed });
+  }
+  if (dmg.healthLost > 0) {
+    events.push({ type: 'playerDamaged', amount: dmg.healthLost });
+  }
+
+  const exitKey: ExitKey = dmg.nextHealth === 0 ? 'defeat' : 'retreat';
+  if (exitKey === 'defeat') {
+    events.push({ type: 'playerDefeated' });
+  } else {
+    events.push({ type: 'retreat' });
+  }
+
+  const nextState: FightState = {
+    ...state,
+    playerBuffer: dmg.nextBuffer,
+    playerHealth: dmg.nextHealth,
+    status: 'finished',
+    exitKey,
+    firedMoments: [...state.firedMoments],
+    pendingMomentQueue: [...state.pendingMomentQueue],
+    allyActions: [...state.allyActions],
+    unlockedChoices: [...state.unlockedChoices],
+    unlockedExits: [...state.unlockedExits],
+    beatLog: [...state.beatLog],
+  };
+
+  return { state: nextState, events };
+}
+
+export function finishFight(
+  state: FightState,
+  encounter: Encounter,
+  overrideExitKey?: ExitKey,
+): FightResult {
+  const exitKey: ExitKey = overrideExitKey ?? state.exitKey ?? 'victory';
+  const healthLost = Math.max(0, state.playerStartingHealth - state.playerHealth);
+  const healthAfter = exitKey === 'defeat' ? 1 : state.playerHealth;
+  const exitEffects = encounter.exits[exitKey]?.effects
+    ? [...encounter.exits[exitKey].effects]
+    : [];
+
+  return {
+    exitKey,
+    healthAfter,
+    beatsPlayed: state.beatNumber,
+    healthLost,
+    clean: healthLost === 0,
+    bloodied: healthAfter <= 2,
+    bufferDiscarded: true,
+    exitEffects,
+  };
 }
 
 export function getUpcomingMove(state: Pick<FightState, 'pendingOpen' | 'activePattern' | 'patternIndex'>): Move {

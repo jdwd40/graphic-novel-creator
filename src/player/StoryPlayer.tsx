@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
+import { selectEncounterArt } from '../combat/art';
 import { nextTell, selectResultCaption } from '../combat/captions';
 import { evaluateCondition } from '../combat/conditions';
 import { getArmourBuffer, getEffectiveMaxHealth, getWeaponDamage } from '../combat/playerState';
 import {
   advanceBeat,
   finishFight,
+  getActiveMoment,
+  getAvailableMomentChoices,
   resolveMomentChoice,
   retreatFight,
   startFight,
 } from '../combat/resolver';
-import type { Encounter, ExitKey, FightState, Tactic } from '../combat/types';
+import type { BeatLogEntry, Encounter, ExitKey, FightState, Tactic } from '../combat/types';
 import {
   applyStoryEffects,
   createPlaythrough,
@@ -26,6 +29,7 @@ import {
 import type { EncounterNode, PassageNode, Story } from '../story/types';
 import { ChoiceList } from './ChoiceList';
 import { CombatScreen, type CombatFeedbackState } from './CombatScreen';
+import { EndOfFightPage } from './EndOfFightPage';
 import { deriveHitFeedback } from './hitFeedback';
 
 export interface StoryPlayerProps {
@@ -217,7 +221,10 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     if (!currentNode || currentNode.kind !== 'encounter') return;
     const active = playthrough.activeFight;
     if (!active || active.encounterId !== currentNode.id) return;
-    if (active.fight.pendingMomentQueue.length > 0) return;
+    if (active.fight.status === 'finished' || active.fight.pendingMomentQueue.length > 0) return;
+
+    const tellBefore = nextTell(active.fight, currentNode.encounter);
+    const artBefore = selectEncounterArt(currentNode.encounter, active.fight);
 
     const step = advanceBeat(
       active.fight,
@@ -234,31 +241,43 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
       .filter((e) => e.type === 'allyActed' && e.caption)
       .map((e) => e.caption!);
     const caption = allyCaptions.length > 0 ? `${allyCaptions.join(' ')} ${baseCaption}` : baseCaption;
+
+    const moveEvent = step.events.find((e) => e.type === 'enemyMove');
+    const logEntry: BeatLogEntry = {
+      kind: 'beat',
+      beatNumber: step.state.beatNumber,
+      move: moveEvent?.move ?? tellBefore.move,
+      tactic: active.fight.currentTactic,
+      image: artBefore,
+      resultCaption: caption,
+      tellCaption: tellBefore.caption,
+    };
+    const nextFight: FightState = {
+      ...step.state,
+      beatLog: [...step.state.beatLog, logEntry],
+    };
+
     setResultCaption(caption);
     setFeedback(
-      deriveHitFeedback(
-        active.fight,
-        step.state,
-        step.events,
-        active.fight.currentTactic,
-      ),
+      nextFight.status === 'finished'
+        ? undefined
+        : deriveHitFeedback(
+            active.fight,
+            nextFight,
+            step.events,
+            active.fight.currentTactic,
+          ),
     );
-
-    if (step.state.status === 'finished') {
-      setFeedback(undefined);
-      completeEncounter(currentNode, step.state);
-      return;
-    }
 
     updatePlaythrough({
       ...playthrough,
       activeFight: {
         encounterId: currentNode.id,
-        fight: step.state,
+        fight: nextFight,
         lastResultCaption: caption,
       },
     });
-  }, [completeEncounter, currentNode, playthrough, updatePlaythrough]);
+  }, [currentNode, playthrough, updatePlaythrough]);
 
   // Auto-advance timer when reader setting is enabled.
   useEffect(() => {
@@ -295,8 +314,37 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     const active = playthrough.activeFight;
     if (!active || active.encounterId !== currentNode.id) return;
 
+    const tellBefore = nextTell(active.fight, currentNode.encounter);
+    const artBefore = selectEncounterArt(currentNode.encounter, active.fight);
     const step = retreatFight(active.fight, currentNode.encounter);
-    completeEncounter(currentNode, step.state);
+    const caption = selectResultCaption(
+      step.events,
+      'steady',
+      currentNode.encounter,
+      active.fight.beatNumber + 1,
+    );
+    const logEntry: BeatLogEntry = {
+      kind: 'beat',
+      beatNumber: active.fight.beatNumber + 1,
+      move: 'strike',
+      tactic: 'steady',
+      image: artBefore,
+      resultCaption: caption,
+      tellCaption: tellBefore.caption,
+    };
+    const nextFight: FightState = {
+      ...step.state,
+      beatLog: [...step.state.beatLog, logEntry],
+    };
+
+    updatePlaythrough({
+      ...playthrough,
+      activeFight: {
+        encounterId: currentNode.id,
+        fight: nextFight,
+        lastResultCaption: caption,
+      },
+    });
   };
 
   const handleSelectMomentChoice = (choiceIndex: number) => {
@@ -309,6 +357,15 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
       items: playthrough.items,
       stats: { ...playthrough.stats, health: playthrough.combat.health },
     };
+    const activeMoment = getActiveMoment(active.fight, currentNode.encounter);
+    const available = getAvailableMomentChoices(
+      active.fight,
+      currentNode.encounter,
+      storyState,
+    );
+    const picked = available.find((c) => c.choiceIndex === choiceIndex);
+    const artNow = selectEncounterArt(currentNode.encounter, active.fight);
+
     const step = resolveMomentChoice(
       active.fight,
       currentNode.encounter,
@@ -316,16 +373,27 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
       storyState,
     );
 
-    if (step.state.status === 'finished') {
-      completeEncounter(currentNode, step.state);
-      return;
+    const nextLog = [...step.state.beatLog];
+    if (activeMoment && picked) {
+      nextLog.push({
+        kind: 'moment',
+        momentIndex: activeMoment.index,
+        caption: activeMoment.moment.caption,
+        chosenLabel: picked.choice.label,
+        image: artNow,
+      });
     }
+
+    const nextFight: FightState = {
+      ...step.state,
+      beatLog: nextLog,
+    };
 
     updatePlaythrough({
       ...playthrough,
       activeFight: {
         encounterId: currentNode.id,
-        fight: step.state,
+        fight: nextFight,
         lastResultCaption: active.lastResultCaption,
       },
     });
@@ -412,25 +480,35 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
           onRestart={handleRestart}
         />
       ) : playthrough.activeFight && playthrough.activeFight.encounterId === currentNode.id ? (
-        <CombatScreen
-          encounter={currentNode.encounter}
-          fightState={playthrough.activeFight.fight}
-          storyState={{
-            flags: playthrough.flags,
-            items: playthrough.items,
-            stats: { ...playthrough.stats, health: playthrough.combat.health },
-          }}
-          resultCaption={
-            playthrough.activeFight.lastResultCaption ||
-            resultCaption ||
-            `${currentNode.encounter.enemy.name} bars your path.`
-          }
-          feedback={feedback}
-          onAdvanceBeat={handleAdvanceBeat}
-          onSelectTactic={handleSelectTactic}
-          onRetreat={handleRetreat}
-          onSelectMomentChoice={handleSelectMomentChoice}
-        />
+        playthrough.activeFight.fight.status === 'finished' ? (
+          <EndOfFightPage
+            encounter={currentNode.encounter}
+            fightState={playthrough.activeFight.fight}
+            onContinue={() =>
+              completeEncounter(currentNode, playthrough.activeFight!.fight)
+            }
+          />
+        ) : (
+          <CombatScreen
+            encounter={currentNode.encounter}
+            fightState={playthrough.activeFight.fight}
+            storyState={{
+              flags: playthrough.flags,
+              items: playthrough.items,
+              stats: { ...playthrough.stats, health: playthrough.combat.health },
+            }}
+            resultCaption={
+              playthrough.activeFight.lastResultCaption ||
+              resultCaption ||
+              `${currentNode.encounter.enemy.name} bars your path.`
+            }
+            feedback={feedback}
+            onAdvanceBeat={handleAdvanceBeat}
+            onSelectTactic={handleSelectTactic}
+            onRetreat={handleRetreat}
+            onSelectMomentChoice={handleSelectMomentChoice}
+          />
+        )
       ) : null}
     </div>
   );

@@ -121,6 +121,7 @@ describe('exit effects, wounds, and manner flags', () => {
     for (let i = 0; i < 3; i++) {
       fireEvent.click(screen.getByTestId('combat-tap-zone'));
     }
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(screen.getByTestId('passage-view-passage_shrine')).toBeInTheDocument();
     expect(

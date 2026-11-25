@@ -305,3 +305,57 @@
     transition: none;
   }
 }
+
+.end-of-fight-page {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-x: hidden;
+}
+
+.end-of-fight-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.end-of-fight-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.end-of-fight-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.strip-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px dashed #cbd5e1;
+}
+
+.strip-panel__captions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.end-of-fight-continue {
+  text-align: center;
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.end-of-fight-continue:hover {
+  background: #1e40af;
+}

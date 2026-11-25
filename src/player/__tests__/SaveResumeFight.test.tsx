@@ -140,6 +140,7 @@ describe('Save and resume a fight in progress', () => {
     for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getByTestId('combat-tap-zone'));
     }
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(loadPlaythrough(story.id)?.activeFight).toBeNull();
   });

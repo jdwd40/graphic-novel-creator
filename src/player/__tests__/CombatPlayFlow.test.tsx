@@ -21,10 +21,11 @@ describe('StoryPlayer combat beat flow and exits', () => {
 
     expect(screen.getByTestId('combat-screen')).toBeInTheDocument();
 
-    // 4 taps on Steady win Standard Brawler with 2 health lost -> health 4/6
+    // 4 taps on Steady win Standard Brawler with 2 health lost -> End-of-fight page -> Continue -> health 4/6
     for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getByTestId('combat-tap-zone'));
     }
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(screen.getByTestId('passage-view-passage_shrine')).toBeInTheDocument();
     expect(screen.getByTestId('player-hp-summary')).toHaveTextContent('Health: 4/6');
@@ -51,6 +52,7 @@ describe('StoryPlayer combat beat flow and exits', () => {
     for (let i = 0; i < 3; i++) {
       fireEvent.click(screen.getByTestId('combat-tap-zone'));
     }
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(screen.getByTestId('passage-view-passage_defeat_cell')).toBeInTheDocument();
     expect(screen.getByTestId('player-hp-summary')).toHaveTextContent('Health: 1/5');
@@ -70,6 +72,7 @@ describe('StoryPlayer combat beat flow and exits', () => {
     render(<StoryPlayer story={story} initialPlaythrough={pt} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Retreat' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(screen.getByTestId('passage-view-passage_retreat_alley')).toBeInTheDocument();
     expect(screen.getByTestId('player-hp-summary')).toHaveTextContent('Health: 5/6');
@@ -92,6 +95,7 @@ describe('StoryPlayer combat beat flow and exits', () => {
     for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getByTestId('combat-tap-zone'));
     }
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     // Arrives immediately at Hammer Brute with 4 health and FULL buffer of 2 again!
     expect(screen.getByRole('img', { name: 'Health 4 of 6, armour 2' })).toBeInTheDocument();
@@ -113,6 +117,7 @@ describe('StoryPlayer combat beat flow and exits', () => {
     for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getByTestId('combat-tap-zone'));
     }
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(screen.getByTestId('unwired-exit-message')).toHaveTextContent(
       'This path is not written yet',

@@ -67,8 +67,9 @@ describe('Moment choices on the combat screen', () => {
     expect(screen.getByTestId('moment-choices-panel')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Demand surrender.' })).toBeInTheDocument();
 
-    // Choosing Demand surrender exits to passage_victory and applies surrender flag
+    // Choosing Demand surrender exits to EndOfFightPage -> Continue reaches passage_victory and applies surrender flag
     fireEvent.click(screen.getByRole('button', { name: 'Demand surrender.' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(screen.getByTestId('passage-view-passage_victory')).toBeInTheDocument();
     expect(loadPlaythrough(story.id)?.flags.brute_spared).toBe(true);
   });

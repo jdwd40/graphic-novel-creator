@@ -51,12 +51,13 @@ describe('Auto-advance reader setting', () => {
     fireEvent.click(screen.getByLabelText(/auto-advance/i));
     expect(loadReaderSettings().autoAdvance).toBe(true);
 
-    // 4 beats * max 6000ms -> advancing 4 steps completes the fight untouched.
+    // 4 beats * max 6000ms -> advancing 4 steps completes the fight untouched -> Continue goes to exit.
     for (let i = 0; i < 4; i++) {
       act(() => {
         vi.advanceTimersByTime(6000);
       });
     }
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     expect(screen.getByTestId('passage-view-passage_shrine')).toBeInTheDocument();
 
     // Persists across remount

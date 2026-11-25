@@ -17,6 +17,7 @@ import { validateStory } from '../story/validation';
 import { EncounterInspector } from './EncounterInspector';
 import { EncounterNodeCard } from './EncounterNodeCard';
 import { ImageLibraryPanel } from './ImageLibraryPanel';
+import { ItemsPanel } from './ItemsPanel';
 import { PassageInspector } from './PassageInspector';
 import { PassageNodeCard } from './PassageNodeCard';
 import { ValidationPanel } from './ValidationPanel';
@@ -42,7 +43,7 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(story.startNodeId);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [sideTab, setSideTab] = useState<'inspector' | 'images'>('inspector');
+  const [sideTab, setSideTab] = useState<'inspector' | 'items' | 'images'>('inspector');
 
   const nodes = useMemo(() => storyToFlowNodes(story, selectedNodeId), [story, selectedNodeId]);
   const edges = useMemo(() => storyToFlowEdges(story), [story]);
@@ -233,10 +234,17 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
           </button>
           <button
             type="button"
+            aria-pressed={sideTab === 'items'}
+            onClick={() => setSideTab((t) => (t === 'items' ? 'inspector' : 'items'))}
+          >
+            Items
+          </button>
+          <button
+            type="button"
             aria-pressed={sideTab === 'images'}
             onClick={() => setSideTab((t) => (t === 'images' ? 'inspector' : 'images'))}
           >
-            {sideTab === 'images' ? 'Inspector' : 'Images'}
+            Images
           </button>
         </div>
 
@@ -282,6 +290,11 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
       <aside className="inspector-pane" aria-label="Node inspector">
         {sideTab === 'images' ? (
           <ImageLibraryPanel story={story} />
+        ) : sideTab === 'items' ? (
+          <ItemsPanel
+            story={story}
+            onUpdateStory={commitStory}
+          />
         ) : selectedNode ? (
           <>
             {rfInstance && (

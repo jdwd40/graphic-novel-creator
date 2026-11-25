@@ -221,6 +221,36 @@ export const ART_ALLEY = makePanelArt(
   'alley',
 );
 
+function makeItemIcon(label: string, accent: string, shape: 'sword' | 'coat' | 'steel' | 'mail' | 'charm'): string {
+  const glyph = (() => {
+    switch (shape) {
+      case 'sword':
+        return `<path d="M22 74 L68 22 M54 20 L70 20 L70 36 M28 56 L40 68" stroke="${accent}" stroke-width="6" stroke-linecap="round" fill="none"/>`;
+      case 'steel':
+        return `<path d="M18 78 L78 18 M60 16 L80 16 L80 36 M24 58 L38 72" stroke="#f8fafc" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M22 74 L74 22" stroke="${accent}" stroke-width="3" fill="none"/>`;
+      case 'coat':
+        return `<path d="M28 24 L42 18 L54 18 L68 24 L74 44 L64 48 L62 78 L34 78 L32 48 L22 44 Z" fill="#292524" stroke="${accent}" stroke-width="3.5"/>`;
+      case 'mail':
+        return `<path d="M26 22 L42 16 L54 16 L70 22 L76 42 L66 48 L64 78 L32 78 L30 48 L20 42 Z" fill="#334155" stroke="${accent}" stroke-width="3.5"/><path d="M36 36 H60 M34 50 H62 M34 64 H62" stroke="#cbd5e1" stroke-width="2.5"/>`;
+      case 'charm':
+        return `<path d="M30 68 Q36 28 48 24 Q60 28 66 68 Z" fill="#1e1b4b" stroke="${accent}" stroke-width="3.5"/><circle cx="48" cy="70" r="6" fill="${accent}"/>`;
+    }
+  })();
+
+  return encodeSvg(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="${label}">
+      <rect width="96" height="96" rx="12" fill="#0f172a"/>
+      ${glyph}
+    </svg>
+  `);
+}
+
+export const ART_ITEM_RUSTY_SWORD = makeItemIcon('Rusty Sword', '#d97706', 'sword');
+export const ART_ITEM_PADDED_COAT = makeItemIcon('Padded Coat', '#b45309', 'coat');
+export const ART_ITEM_STEEL_SWORD = makeItemIcon('Steel Sword', '#38bdf8', 'steel');
+export const ART_ITEM_MAIL_HAUBERK = makeItemIcon('Mail', '#94a3b8', 'mail');
+export const ART_ITEM_BELL_CHARM = makeItemIcon('Bell-Clapper Charm', '#c084fc', 'charm');
+
 export const SEED_IMAGE_IDS = {
   courtyard: 'img_seed_courtyard',
   armory: 'img_seed_armory',
@@ -234,6 +264,11 @@ export const SEED_IMAGE_IDS = {
   bruteWounded: 'img_seed_brute_wounded',
   bellwarden: 'img_seed_bellwarden',
   bellwardenP2: 'img_seed_bellwarden_p2',
+  itemRustySword: 'img_seed_item_rusty_sword',
+  itemPaddedCoat: 'img_seed_item_padded_coat',
+  itemSteelSword: 'img_seed_item_steel_sword',
+  itemMailHauberk: 'img_seed_item_mail_hauberk',
+  itemBellCharm: 'img_seed_item_bell_charm',
 } as const;
 
 const SEED_ART_ENTRIES: ReadonlyArray<{ id: string; name: string; dataUrl: string }> = [
@@ -249,6 +284,11 @@ const SEED_ART_ENTRIES: ReadonlyArray<{ id: string; name: string; dataUrl: strin
   { id: SEED_IMAGE_IDS.bruteWounded, name: 'Hammer Brute Wounded.svg', dataUrl: ART_BRUTE_WOUNDED },
   { id: SEED_IMAGE_IDS.bellwarden, name: 'Iron Bellwarden.svg', dataUrl: ART_BELLWARDEN },
   { id: SEED_IMAGE_IDS.bellwardenP2, name: 'Bellwarden Awakened.svg', dataUrl: ART_BELLWARDEN_P2 },
+  { id: SEED_IMAGE_IDS.itemRustySword, name: 'Rusty Sword.svg', dataUrl: ART_ITEM_RUSTY_SWORD },
+  { id: SEED_IMAGE_IDS.itemPaddedCoat, name: 'Padded Coat.svg', dataUrl: ART_ITEM_PADDED_COAT },
+  { id: SEED_IMAGE_IDS.itemSteelSword, name: 'Steel Sword.svg', dataUrl: ART_ITEM_STEEL_SWORD },
+  { id: SEED_IMAGE_IDS.itemMailHauberk, name: 'Mail Hauberk.svg', dataUrl: ART_ITEM_MAIL_HAUBERK },
+  { id: SEED_IMAGE_IDS.itemBellCharm, name: 'Bell-Clapper Charm.svg', dataUrl: ART_ITEM_BELL_CHARM },
 ];
 
 export function ensureSeedArtworkRegistered(): void {

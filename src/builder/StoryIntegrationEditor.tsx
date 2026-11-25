@@ -1,21 +1,22 @@
 import { useState } from 'react';
 import type {
-  Condition,
   Encounter,
   ExitEffect,
   Modifier,
   Moment,
   MomentChoice,
   Move,
-  StatOperator,
 } from '../combat/types';
+import type { Story } from '../story/types';
+import { ConditionEditor, EffectsListEditor } from './ConditionEffectEditors';
 
 export interface StoryIntegrationEditorProps {
   encounter: Encounter;
+  story?: Story;
   onUpdate: (nextEncounter: Encounter) => void;
 }
 
-function formatConditionSummary(cond: Condition): string {
+function formatConditionSummary(cond: Modifier['if']): string {
   if ('flag' in cond) return `flag:${cond.flag}`;
   if ('item' in cond) return `item:${cond.item}`;
   return `stat:${cond.stat} ${cond.op} ${cond.value}`;
@@ -48,38 +49,9 @@ function defaultMoment(): Moment {
   };
 }
 
-function defaultExitEffect(kind: string): ExitEffect {
-  switch (kind) {
-    case 'addItem':
-      return { addItem: 'steel_sword' };
-    case 'removeItem':
-      return { removeItem: 'steel_sword' };
-    case 'changeHealth':
-      return { changeHealth: -1 };
-    case 'addWound':
-      return { addWound: 'Cracked rib' };
-    case 'removeWound':
-      return { removeWound: 'Cracked rib' };
-    case 'rest':
-      return { rest: true };
-    case 'setFlag':
-    default:
-      return { setFlag: 'encounter_flag' };
-  }
-}
-
-function getExitEffectKind(effect: ExitEffect): string {
-  if ('setFlag' in effect) return 'setFlag';
-  if ('addItem' in effect) return 'addItem';
-  if ('removeItem' in effect) return 'removeItem';
-  if ('changeHealth' in effect) return 'changeHealth';
-  if ('addWound' in effect) return 'addWound';
-  if ('removeWound' in effect) return 'removeWound';
-  return 'rest';
-}
-
 export function StoryIntegrationEditor({
   encounter,
+  story,
   onUpdate,
 }: StoryIntegrationEditorProps) {
   const [newExitLabel, setNewExitLabel] = useState('');
@@ -148,8 +120,6 @@ export function StoryIntegrationEditor({
         <summary>Modifiers ({modifiers.length})</summary>
         <div className="inspector-advanced-body">
           {modifiers.map((mod, idx) => {
-            const condKind =
-              'flag' in mod.if ? 'flag' : 'item' in mod.if ? 'item' : 'stat';
             return (
               <div
                 key={`mod-${idx}`}
@@ -169,112 +139,19 @@ export function StoryIntegrationEditor({
                   </button>
                 </div>
 
-                <div className="pattern-editor-row">
-                  <select
-                    aria-label={`Modifier ${idx + 1} condition type`}
-                    value={condKind}
-                    onChange={(e) => {
-                      const nextCondKind = e.target.value;
-                      let nextIf: Condition;
-                      if (nextCondKind === 'flag') nextIf = { flag: 'knows_weakness' };
-                      else if (nextCondKind === 'item') nextIf = { item: 'iron_key' };
-                      else nextIf = { stat: 'health', op: 'gte', value: 4 };
-                      updateModifiers(
-                        modifiers.map((m, i) => (i === idx ? { ...m, if: nextIf } : m)),
-                      );
-                    }}
-                  >
-                    <option value="flag">Flag</option>
-                    <option value="item">Item</option>
-                    <option value="stat">Stat</option>
-                  </select>
-
-                  {'flag' in mod.if && (
-                    <input
-                      type="text"
-                      aria-label={`Modifier ${idx + 1} flag`}
-                      value={mod.if.flag}
-                      onChange={(e) =>
-                        updateModifiers(
-                          modifiers.map((m, i) =>
-                            i === idx ? { ...m, if: { flag: e.target.value } } : m,
-                          ),
-                        )
-                      }
-                    />
-                  )}
-
-                  {'item' in mod.if && (
-                    <input
-                      type="text"
-                      aria-label={`Modifier ${idx + 1} item`}
-                      value={mod.if.item}
-                      onChange={(e) =>
-                        updateModifiers(
-                          modifiers.map((m, i) =>
-                            i === idx ? { ...m, if: { item: e.target.value } } : m,
-                          ),
-                        )
-                      }
-                    />
-                  )}
-
-                  {'stat' in mod.if && (
-                    <>
-                      <input
-                        type="text"
-                        aria-label={`Modifier ${idx + 1} stat`}
-                        value={mod.if.stat}
-                        onChange={(e) => {
-                          const prev = mod.if as Extract<Condition, { stat: string }>;
-                          updateModifiers(
-                            modifiers.map((m, i) =>
-                              i === idx
-                                ? { ...m, if: { ...prev, stat: e.target.value } }
-                                : m,
-                            ),
-                          );
-                        }}
-                      />
-                      <select
-                        aria-label={`Modifier ${idx + 1} stat op`}
-                        value={mod.if.op}
-                        onChange={(e) => {
-                          const prev = mod.if as Extract<Condition, { stat: string }>;
-                          updateModifiers(
-                            modifiers.map((m, i) =>
-                              i === idx
-                                ? { ...m, if: { ...prev, op: e.target.value as StatOperator } }
-                                : m,
-                            ),
-                          );
-                        }}
-                      >
-                        <option value="gte">&gt;=</option>
-                        <option value="gt">&gt;</option>
-                        <option value="lte">&lt;=</option>
-                        <option value="lt">&lt;</option>
-                        <option value="eq">=</option>
-                        <option value="neq">!=</option>
-                      </select>
-                      <input
-                        type="number"
-                        aria-label={`Modifier ${idx + 1} stat value`}
-                        value={mod.if.value}
-                        onChange={(e) => {
-                          const prev = mod.if as Extract<Condition, { stat: string }>;
-                          updateModifiers(
-                            modifiers.map((m, i) =>
-                              i === idx
-                                ? { ...m, if: { ...prev, value: Number(e.target.value) || 0 } }
-                                : m,
-                            ),
-                          );
-                        }}
-                      />
-                    </>
-                  )}
-                </div>
+                <ConditionEditor
+                  label="Trigger condition"
+                  value={mod.if}
+                  story={story}
+                  allowNone={false}
+                  idPrefix={`Modifier ${idx + 1}`}
+                  onChange={(nextIf) => {
+                    if (!nextIf) return;
+                    updateModifiers(
+                      modifiers.map((m, i) => (i === idx ? { ...m, if: nextIf } : m)),
+                    );
+                  }}
+                />
 
                 <div className="pattern-editor-row">
                   <select
@@ -715,148 +592,14 @@ export function StoryIntegrationEditor({
                   )}
                 </div>
 
-                {cfg.effects.map((eff, eIdx) => {
-                  const kind = getExitEffectKind(eff);
-                  return (
-                    <div key={`eff-${key}-${eIdx}`} className="pattern-editor-row">
-                      <select
-                        aria-label={`${key} effect ${eIdx + 1} type`}
-                        value={kind}
-                        onChange={(e) => {
-                          const nextEff = defaultExitEffect(e.target.value);
-                          updateExitEffects(
-                            key,
-                            cfg.effects.map((x, j) => (j === eIdx ? nextEff : x)),
-                          );
-                        }}
-                      >
-                        <option value="setFlag">Set flag</option>
-                        <option value="addItem">Add item</option>
-                        <option value="removeItem">Remove item</option>
-                        <option value="changeHealth">Change health</option>
-                        <option value="addWound">Add wound</option>
-                        <option value="removeWound">Remove wound</option>
-                        <option value="rest">Rest</option>
-                      </select>
-
-                      {'setFlag' in eff && (
-                        <input
-                          type="text"
-                          aria-label={`${key} effect ${eIdx + 1} value`}
-                          value={eff.setFlag}
-                          onChange={(e) =>
-                            updateExitEffects(
-                              key,
-                              cfg.effects.map((x, j) =>
-                                j === eIdx ? { setFlag: e.target.value } : x,
-                              ),
-                            )
-                          }
-                        />
-                      )}
-                      {'addItem' in eff && (
-                        <input
-                          type="text"
-                          aria-label={`${key} effect ${eIdx + 1} value`}
-                          value={eff.addItem}
-                          onChange={(e) =>
-                            updateExitEffects(
-                              key,
-                              cfg.effects.map((x, j) =>
-                                j === eIdx ? { addItem: e.target.value } : x,
-                              ),
-                            )
-                          }
-                        />
-                      )}
-                      {'removeItem' in eff && (
-                        <input
-                          type="text"
-                          aria-label={`${key} effect ${eIdx + 1} value`}
-                          value={eff.removeItem}
-                          onChange={(e) =>
-                            updateExitEffects(
-                              key,
-                              cfg.effects.map((x, j) =>
-                                j === eIdx ? { removeItem: e.target.value } : x,
-                              ),
-                            )
-                          }
-                        />
-                      )}
-                      {'changeHealth' in eff && (
-                        <input
-                          type="number"
-                          aria-label={`${key} effect ${eIdx + 1} value`}
-                          value={eff.changeHealth}
-                          onChange={(e) =>
-                            updateExitEffects(
-                              key,
-                              cfg.effects.map((x, j) =>
-                                j === eIdx
-                                  ? { changeHealth: Number(e.target.value) || 0 }
-                                  : x,
-                              ),
-                            )
-                          }
-                        />
-                      )}
-                      {'addWound' in eff && (
-                        <input
-                          type="text"
-                          aria-label={`${key} effect ${eIdx + 1} value`}
-                          value={eff.addWound}
-                          onChange={(e) =>
-                            updateExitEffects(
-                              key,
-                              cfg.effects.map((x, j) =>
-                                j === eIdx ? { addWound: e.target.value } : x,
-                              ),
-                            )
-                          }
-                        />
-                      )}
-                      {'removeWound' in eff && (
-                        <input
-                          type="text"
-                          aria-label={`${key} effect ${eIdx + 1} value`}
-                          value={eff.removeWound}
-                          onChange={(e) =>
-                            updateExitEffects(
-                              key,
-                              cfg.effects.map((x, j) =>
-                                j === eIdx ? { removeWound: e.target.value } : x,
-                              ),
-                            )
-                          }
-                        />
-                      )}
-
-                      <button
-                        type="button"
-                        aria-label={`Remove ${key} effect ${eIdx + 1}`}
-                        onClick={() =>
-                          updateExitEffects(
-                            key,
-                            cfg.effects.filter((_, j) => j !== eIdx),
-                          )
-                        }
-                      >
-                        ×
-                      </button>
-                    </div>
-                  );
-                })}
-
-                <button
-                  type="button"
-                  aria-label={`Add effect to ${key}`}
-                  onClick={() =>
-                    updateExitEffects(key, [...cfg.effects, { setFlag: 'new_flag' }])
-                  }
-                >
-                  Add exit effect
-                </button>
+                <EffectsListEditor
+                  label="Exit effects"
+                  effects={cfg.effects}
+                  story={story}
+                  idPrefix={key}
+                  allowWounds
+                  onChange={(nextEffects) => updateExitEffects(key, nextEffects)}
+                />
               </div>
             );
           })}

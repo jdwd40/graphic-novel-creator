@@ -1,4 +1,5 @@
 import type { PassageChoice, PassageNode, Story } from '../story/types';
+import { ConditionEditor, EffectsListEditor } from './ConditionEffectEditors';
 import { ImagePicker } from './ImagePicker';
 
 export interface PassageInspectorProps {
@@ -144,6 +145,19 @@ export function PassageInspector({ node, story, onUpdate, onSetStart }: PassageI
         <label htmlFor="passage-rest-toggle">Rest here (restore full health)</label>
       </div>
 
+      <EffectsListEditor
+        label="Passage effects (when entered)"
+        effects={node.effects ?? []}
+        story={story}
+        idPrefix="Passage"
+        onChange={(nextEffects) =>
+          onUpdate({
+            ...node,
+            effects: nextEffects,
+          })
+        }
+      />
+
       <div className="inspector-field">
         <div className="integration-row-head">
           <span className="inspector-label">Choices ({node.choices.length})</span>
@@ -226,6 +240,36 @@ export function PassageInspector({ node, story, onUpdate, onSetStart }: PassageI
                 ))}
               </select>
             </div>
+
+            <ConditionEditor
+              label="Visibility condition"
+              value={choice.condition}
+              story={story}
+              idPrefix={`Choice ${idx + 1}`}
+              onChange={(nextCondition) =>
+                onUpdate({
+                  ...node,
+                  choices: node.choices.map((c, i) =>
+                    i === idx ? { ...c, condition: nextCondition } : c,
+                  ),
+                })
+              }
+            />
+
+            <EffectsListEditor
+              label="Choice effects"
+              effects={choice.effects ?? []}
+              story={story}
+              idPrefix={`Choice ${idx + 1}`}
+              onChange={(nextEffects) =>
+                onUpdate({
+                  ...node,
+                  choices: node.choices.map((c, i) =>
+                    i === idx ? { ...c, effects: nextEffects } : c,
+                  ),
+                })
+              }
+            />
           </div>
         ))}
       </div>

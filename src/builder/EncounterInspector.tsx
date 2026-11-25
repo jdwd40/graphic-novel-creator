@@ -281,7 +281,7 @@ export function EncounterInspector({
         onUpdate={onUpdate}
       />
 
-      <StoryIntegrationEditor encounter={encounter} onUpdate={onUpdate} />
+      <StoryIntegrationEditor encounter={encounter} story={story} onUpdate={onUpdate} />
 
       <BossEditor
         encounter={encounter}

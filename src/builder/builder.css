@@ -166,6 +166,14 @@
   color: #334155;
 }
 
+.story-node__output-markers {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-right: auto;
+  font-size: 0.72rem;
+}
+
 .balance-preview-table {
   width: 100%;
   border-collapse: collapse;

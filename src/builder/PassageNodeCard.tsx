@@ -24,17 +24,43 @@ export function PassageNodeCard({ data, selected }: NodeProps<PassageFlowNode>) 
       </div>
       <div className="story-node__title">{passage.title}</div>
       <div className="story-node__outputs">
-        {passage.choices.map((choice) => (
-          <div key={choice.id} className="story-node__output-row">
-            <span className="story-node__output-label">{choice.label}</span>
-            <Handle
-              type="source"
-              position={Position.Right}
-              id={choice.id}
-              aria-label={`Choice ${choice.label}`}
-            />
-          </div>
-        ))}
+        {passage.choices.map((choice) => {
+          const hasCondition = Boolean(choice.condition);
+          const hasEffects = Boolean(choice.effects && choice.effects.length > 0);
+          return (
+            <div key={choice.id} className="story-node__output-row">
+              <span className="story-node__output-markers">
+                {hasCondition && (
+                  <span
+                    className="story-node__marker"
+                    title="Conditional choice"
+                    aria-label="Conditional choice"
+                    data-testid={`choice-lock-${choice.id}`}
+                  >
+                    🔒
+                  </span>
+                )}
+                {hasEffects && (
+                  <span
+                    className="story-node__marker"
+                    title="Choice grants effects"
+                    aria-label="Choice grants effects"
+                    data-testid={`choice-gift-${choice.id}`}
+                  >
+                    🎁
+                  </span>
+                )}
+              </span>
+              <span className="story-node__output-label">{choice.label}</span>
+              <Handle
+                type="source"
+                position={Position.Right}
+                id={choice.id}
+                aria-label={`Choice ${choice.label}`}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

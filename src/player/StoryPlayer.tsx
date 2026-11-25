@@ -17,7 +17,8 @@ import {
 } from '../story/playthrough';
 import type { EncounterNode, PassageNode, Story } from '../story/types';
 import { ChoiceList } from './ChoiceList';
-import { CombatScreen } from './CombatScreen';
+import { CombatScreen, type CombatFeedbackState } from './CombatScreen';
+import { deriveHitFeedback } from './hitFeedback';
 
 export interface StoryPlayerProps {
   story: Story;
@@ -77,8 +78,16 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
   const [unwiredNotice, setUnwiredNotice] = useState<string | null>(null);
   const [resultCaption, setResultCaption] = useState<string>('');
   const [showInventory, setShowInventory] = useState(false);
+  const [feedback, setFeedback] = useState<CombatFeedbackState | undefined>(undefined);
 
   const currentNode = story.nodes[playthrough.currentNodeId];
+
+  // Clear transient hit feedback after 350ms so animations reset cleanly without blocking taps.
+  useEffect(() => {
+    if (!feedback) return;
+    const timer = window.setTimeout(() => setFeedback(undefined), 350);
+    return () => window.clearTimeout(timer);
+  }, [feedback]);
 
   // Start fight automatically when arriving on an encounter node without an active fight.
   useEffect(() => {
@@ -188,8 +197,17 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
       step.state.beatNumber,
     );
     setResultCaption(caption);
+    setFeedback(
+      deriveHitFeedback(
+        active.fight,
+        step.state,
+        step.events,
+        active.fight.currentTactic,
+      ),
+    );
 
     if (step.state.status === 'finished') {
+      setFeedback(undefined);
       completeEncounter(currentNode, step.state);
       return;
     }
@@ -277,6 +295,7 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
           encounter={currentNode.encounter}
           fightState={playthrough.activeFight.fight}
           resultCaption={resultCaption || `${currentNode.encounter.enemy.name} bars your path.`}
+          feedback={feedback}
           onAdvanceBeat={handleAdvanceBeat}
           onSelectTactic={handleSelectTactic}
           onRetreat={handleRetreat}

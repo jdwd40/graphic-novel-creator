@@ -11,9 +11,11 @@ import {
   type ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { deleteNode, saveStory, setExitTarget } from '../story/store';
+import { deleteNode, saveStory, setExitTarget, updateEncounterNode } from '../story/store';
 import type { Story, StoryNode } from '../story/types';
+import { EncounterInspector } from './EncounterInspector';
 import { EncounterNodeCard } from './EncounterNodeCard';
+import { PassageInspector } from './PassageInspector';
 import { PassageNodeCard } from './PassageNodeCard';
 import {
   createDefaultEncounterNode,
@@ -231,11 +233,7 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
 
       <aside className="inspector-pane" aria-label="Node inspector">
         {selectedNode ? (
-          <div>
-            <h2>{selectedNode.title}</h2>
-            <p>
-              Node type: <strong>{selectedNode.kind}</strong> ({selectedNode.id})
-            </p>
+          <>
             {rfInstance && (
               <button
                 type="button"
@@ -248,7 +246,26 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
                 Center on canvas
               </button>
             )}
-          </div>
+            {selectedNode.kind === 'encounter' ? (
+              <EncounterInspector
+                node={selectedNode}
+                onUpdate={(nextEncounter) => {
+                  const next = updateEncounterNode(story, selectedNode.id, nextEncounter);
+                  commitStory(next);
+                }}
+              />
+            ) : (
+              <PassageInspector
+                node={selectedNode}
+                onUpdate={(nextPassage) => {
+                  commitStory({
+                    ...story,
+                    nodes: { ...story.nodes, [selectedNode.id]: nextPassage },
+                  });
+                }}
+              />
+            )}
+          </>
         ) : (
           <p>Select a passage or encounter node on the story map.</p>
         )}

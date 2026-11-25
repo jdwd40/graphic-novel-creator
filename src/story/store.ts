@@ -1,5 +1,7 @@
 import { validateEncounterJson } from '../combat/validation';
 import type { Encounter } from '../combat/types';
+import { ensureSeedArtworkRegistered } from './artwork';
+import { migrateStoryToImageIds } from './migration';
 import type { Story, StoryNode } from './types';
 
 const STORY_STORAGE_PREFIX = 'gnc_story_v1_';
@@ -21,11 +23,17 @@ export function saveStory(story: Story): void {
 }
 
 export function loadStory(storyId: string): Story | null {
+  ensureSeedArtworkRegistered();
   const raw = localStorage.getItem(getStoryStorageKey(storyId));
   if (!raw) {
     return null;
   }
-  return JSON.parse(raw) as Story;
+  const parsed = JSON.parse(raw) as Story;
+  const migrated = migrateStoryToImageIds(parsed);
+  if (migrated.changed) {
+    localStorage.setItem(getStoryStorageKey(storyId), JSON.stringify(migrated.story));
+  }
+  return migrated.story;
 }
 
 export function updateEncounterNode(

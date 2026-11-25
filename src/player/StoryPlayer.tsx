@@ -27,6 +27,7 @@ import {
   type ReaderSettings,
 } from '../story/settings';
 import type { EncounterNode, PassageNode, Story } from '../story/types';
+import { useImageUrl } from '../story/useImageUrl';
 import { ChoiceList } from './ChoiceList';
 import { CombatScreen, type CombatFeedbackState } from './CombatScreen';
 import { EndOfFightPage } from './EndOfFightPage';
@@ -528,12 +529,13 @@ function PassageView({
   const visibleChoices = node.choices.filter((choice) =>
     evaluateCondition(choice.condition, storyState),
   );
+  const resolvedImage = useImageUrl(node.image);
 
   return (
     <article className="combat-screen" data-testid={`passage-view-${node.id}`}>
-      {node.image && (
+      {resolvedImage && (
         <div className="combat-art-stage">
-          <img src={node.image} alt={node.title} className="combat-art-img" />
+          <img src={resolvedImage} alt={node.title} className="combat-art-img" />
         </div>
       )}
       <div className="story-caption-box">

@@ -1,10 +1,16 @@
 import type { Encounter, FightState } from '../combat/types';
+import { useImageUrl } from '../story/useImageUrl';
 import './CombatScreen.css';
 
 export interface EndOfFightPageProps {
   encounter: Encounter;
   fightState: FightState;
   onContinue: () => void;
+}
+
+function ResolvedPanelImage({ src, alt }: { src: string; alt: string }) {
+  const resolved = useImageUrl(src);
+  return <img src={resolved} alt={alt} className="combat-art-img" />;
 }
 
 function formatOutcomeHeading(encounter: Encounter, fightState: FightState): string {
@@ -36,14 +42,13 @@ export function EndOfFightPage({
         {fightState.beatLog.map((entry, idx) => (
           <li key={`strip-${idx}`} className="strip-panel" data-testid={`strip-panel-${idx}`}>
             <div className="combat-art-stage">
-              <img
+              <ResolvedPanelImage
                 src={entry.image}
                 alt={
                   entry.kind === 'beat'
                     ? `${encounter.enemy.name} — beat ${entry.beatNumber}`
                     : `${encounter.enemy.name} — story moment`
                 }
-                className="combat-art-img"
               />
             </div>
             {entry.kind === 'beat' ? (

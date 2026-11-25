@@ -1,3 +1,5 @@
+import { getImageSync, registerImageSync } from './imageStore';
+
 function encodeSvg(svg: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg.trim())}`;
 }
@@ -218,3 +220,48 @@ export const ART_ALLEY = makePanelArt(
   '#38bdf8',
   'alley',
 );
+
+export const SEED_IMAGE_IDS = {
+  courtyard: 'img_seed_courtyard',
+  armory: 'img_seed_armory',
+  shrine: 'img_seed_shrine',
+  belfryDawn: 'img_seed_belfry_dawn',
+  cell: 'img_seed_cell',
+  alley: 'img_seed_alley',
+  gatehouse: 'img_seed_gatehouse',
+  brute: 'img_seed_brute',
+  bruteOpen: 'img_seed_brute_open',
+  bruteWounded: 'img_seed_brute_wounded',
+  bellwarden: 'img_seed_bellwarden',
+  bellwardenP2: 'img_seed_bellwarden_p2',
+} as const;
+
+const SEED_ART_ENTRIES: ReadonlyArray<{ id: string; name: string; dataUrl: string }> = [
+  { id: SEED_IMAGE_IDS.courtyard, name: 'The Courtyard Gate.svg', dataUrl: ART_COURTYARD },
+  { id: SEED_IMAGE_IDS.armory, name: 'Watch Armory.svg', dataUrl: ART_ARMORY },
+  { id: SEED_IMAGE_IDS.shrine, name: 'Lantern Shrine.svg', dataUrl: ART_SHRINE },
+  { id: SEED_IMAGE_IDS.belfryDawn, name: 'Dawn Over the Belfry.svg', dataUrl: ART_BELFRY_DAWN },
+  { id: SEED_IMAGE_IDS.cell, name: 'Guardhouse Cell.svg', dataUrl: ART_CELL },
+  { id: SEED_IMAGE_IDS.alley, name: 'Rain-Slick Alley.svg', dataUrl: ART_ALLEY },
+  { id: SEED_IMAGE_IDS.gatehouse, name: 'Gatehouse Guard.svg', dataUrl: ART_GATEHOUSE },
+  { id: SEED_IMAGE_IDS.brute, name: 'Hammer Brute.svg', dataUrl: ART_BRUTE },
+  { id: SEED_IMAGE_IDS.bruteOpen, name: 'Hammer Brute Open.svg', dataUrl: ART_BRUTE_OPEN },
+  { id: SEED_IMAGE_IDS.bruteWounded, name: 'Hammer Brute Wounded.svg', dataUrl: ART_BRUTE_WOUNDED },
+  { id: SEED_IMAGE_IDS.bellwarden, name: 'Iron Bellwarden.svg', dataUrl: ART_BELLWARDEN },
+  { id: SEED_IMAGE_IDS.bellwardenP2, name: 'Bellwarden Awakened.svg', dataUrl: ART_BELLWARDEN_P2 },
+];
+
+export function ensureSeedArtworkRegistered(): void {
+  for (const entry of SEED_ART_ENTRIES) {
+    if (!getImageSync(entry.id)) {
+      registerImageSync({
+        id: entry.id,
+        storyId: 'iron-bell',
+        name: entry.name,
+        mimeType: 'image/svg+xml',
+        dataUrl: entry.dataUrl,
+        createdAt: 1,
+      });
+    }
+  }
+}

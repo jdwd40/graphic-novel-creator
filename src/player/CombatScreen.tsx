@@ -11,6 +11,7 @@ import type {
 } from '../combat/types';
 import { ChoiceList } from './ChoiceList';
 import { HealthPips } from './HealthPips';
+import { useImageUrl } from '../story/useImageUrl';
 import './CombatScreen.css';
 
 export interface CombatFeedbackState {
@@ -83,7 +84,8 @@ export function CombatScreen({
   const availableMomentChoices = activeMoment
     ? getAvailableMomentChoices(fightState, encounter, storyState)
     : [];
-  const imageSource = artSrc ?? selectEncounterArt(encounter, fightState);
+  const rawImageSource = artSrc ?? selectEncounterArt(encounter, fightState);
+  const imageSource = useImageUrl(rawImageSource);
 
   return (
     <section

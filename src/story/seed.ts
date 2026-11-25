@@ -1,24 +1,13 @@
 import { BEHAVIOUR_PRESETS, GEAR_TIERS, TOUGHNESS_PRESETS } from '../combat/constants';
-import {
-  ART_ALLEY,
-  ART_ARMORY,
-  ART_BELFRY_DAWN,
-  ART_BELLWARDEN,
-  ART_BELLWARDEN_P2,
-  ART_BRUTE,
-  ART_BRUTE_OPEN,
-  ART_BRUTE_WOUNDED,
-  ART_CELL,
-  ART_COURTYARD,
-  ART_GATEHOUSE,
-  ART_SHRINE,
-} from './artwork';
+import { ensureSeedArtworkRegistered, SEED_IMAGE_IDS } from './artwork';
 import type { Story } from './types';
 
 export function createSeedStory(): Story {
+  ensureSeedArtworkRegistered();
   return {
     id: 'iron-bell',
     title: 'The Iron Bell',
+    schemaVersion: 2,
     startNodeId: 'passage_intro',
     items: {
       rusty_sword: {
@@ -57,7 +46,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'The Courtyard Gate',
         text: 'Rain hammers the cobblestones below the Iron Bell tower. Beyond the unlocked armory hatch, a lantern swings in the gatehouse.',
-        image: ART_COURTYARD,
+        image: SEED_IMAGE_IDS.courtyard,
         position: { x: 60, y: 120 },
         choices: [
           {
@@ -73,7 +62,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'Watch Armory',
         text: 'You strap on a Padded Coat and draw a Rusty Sword from the rack. Footsteps echo from the gatehouse archway.',
-        image: ART_ARMORY,
+        image: SEED_IMAGE_IDS.armory,
         position: { x: 340, y: 120 },
         choices: [
           {
@@ -98,7 +87,7 @@ export function createSeedStory(): Story {
           type: 'encounter',
           enemy: {
             name: 'Gatehouse Guard',
-            image: ART_GATEHOUSE,
+            image: SEED_IMAGE_IDS.gatehouse,
             toughness: 'standard',
             health: TOUGHNESS_PRESETS.standard.health,
             hit: TOUGHNESS_PRESETS.standard.hit,
@@ -125,7 +114,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'Lantern Shrine',
         text: 'The guard slumps against the stone pillar. Ahead lies a quiet shrine stocked with foundry steel and a hearth to catch your breath.',
-        image: ART_SHRINE,
+        image: SEED_IMAGE_IDS.shrine,
         position: { x: 960, y: 80 },
         choices: [
           {
@@ -150,7 +139,7 @@ export function createSeedStory(): Story {
           type: 'encounter',
           enemy: {
             name: 'Hammer Brute',
-            image: ART_BRUTE,
+            image: SEED_IMAGE_IDS.brute,
             toughness: 'tough',
             health: TOUGHNESS_PRESETS.tough.health,
             hit: TOUGHNESS_PRESETS.tough.hit,
@@ -164,8 +153,8 @@ export function createSeedStory(): Story {
             result: { heavyBlocked: ['The hammer crashes into the floor and sticks there.'] },
           },
           art: {
-            open: ART_BRUTE_OPEN,
-            enemyWounded: ART_BRUTE_WOUNDED,
+            open: SEED_IMAGE_IDS.bruteOpen,
+            enemyWounded: SEED_IMAGE_IDS.bruteWounded,
           },
           modifiers: [{ if: { flag: 'knows_weakness' }, effect: 'revealTells' }],
           moments: [
@@ -204,7 +193,7 @@ export function createSeedStory(): Story {
           type: 'encounter',
           enemy: {
             name: 'Iron Bellwarden',
-            image: ART_BELLWARDEN,
+            image: SEED_IMAGE_IDS.bellwarden,
             toughness: 'boss',
             health: TOUGHNESS_PRESETS.boss.health,
             hit: TOUGHNESS_PRESETS.boss.hit,
@@ -217,7 +206,7 @@ export function createSeedStory(): Story {
             {
               healthAtMost: 12,
               pattern: ['strike', 'heavy'],
-              image: ART_BELLWARDEN_P2,
+              image: SEED_IMAGE_IDS.bellwardenP2,
             },
           ],
           moments: [
@@ -247,7 +236,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'Dawn Over the Belfry',
         text: 'The Iron Bell falls silent. Daylight breaks across the valley below.',
-        image: ART_BELFRY_DAWN,
+        image: SEED_IMAGE_IDS.belfryDawn,
         position: { x: 1890, y: 40 },
         isEnding: true,
         choices: [],
@@ -257,7 +246,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'The Guardhouse Cell',
         text: 'You wake on cold flagstones, battered but alive. The story is not over yet.',
-        image: ART_CELL,
+        image: SEED_IMAGE_IDS.cell,
         position: { x: 960, y: 310 },
         choices: [
           {
@@ -272,7 +261,7 @@ export function createSeedStory(): Story {
         kind: 'passage',
         title: 'Rain-Slick Alley',
         text: 'You fall back into the alley to catch your breath before deciding whether to try again.',
-        image: ART_ALLEY,
+        image: SEED_IMAGE_IDS.alley,
         position: { x: 960, y: 470 },
         choices: [
           {

@@ -1,5 +1,6 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import type { EncounterNode } from '../story/types';
+import { useImageUrl } from '../story/useImageUrl';
 
 export interface EncounterFlowData extends Record<string, unknown> {
   encounterNode: EncounterNode;
@@ -25,6 +26,7 @@ export function EncounterNodeCard({ data, selected }: NodeProps<EncounterFlowNod
   const { encounterNode } = data;
   const { encounter } = encounterNode;
   const exitKeys = getVisibleEncounterExitKeys(encounterNode);
+  const thumbSrc = useImageUrl(encounter.enemy.image);
 
   return (
     <div
@@ -34,7 +36,7 @@ export function EncounterNodeCard({ data, selected }: NodeProps<EncounterFlowNod
       <Handle type="target" position={Position.Left} id="in" aria-label="Incoming story link" />
       <div className="story-node__encounter-top">
         <img
-          src={encounter.enemy.image}
+          src={thumbSrc}
           alt={encounter.enemy.name}
           className="story-node__thumb"
         />

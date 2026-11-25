@@ -34,7 +34,7 @@ export function subscribeImageStore(listener: () => void): () => void {
   };
 }
 
-export function isImageId(value: string | undefined): value is string {
+export function isImageId(value: string | undefined): boolean {
   return typeof value === 'string' && value.startsWith('img_');
 }
 

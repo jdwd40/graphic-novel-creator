@@ -311,6 +311,54 @@
   font-size: 0.82rem;
 }
 
+.validation-panel {
+  border-top: 1px solid #d4cfc3;
+  background: #ffffff;
+  padding: 0.55rem 1rem;
+  max-height: 150px;
+  overflow-y: auto;
+  font-size: 0.82rem;
+}
+
+.validation-panel__list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.validation-item__btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.validation-item--error .validation-item__tag {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.validation-item--warning .validation-item__tag {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
   .builder-layout {
     grid-template-columns: 1fr;

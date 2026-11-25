@@ -11,12 +11,14 @@ import {
   type ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { deleteNode, saveStory, setExitTarget, updateEncounterNode } from '../story/store';
+import { deleteNode, saveStory, setExitTarget } from '../story/store';
 import type { Story, StoryNode } from '../story/types';
+import { validateStory } from '../story/validation';
 import { EncounterInspector } from './EncounterInspector';
 import { EncounterNodeCard } from './EncounterNodeCard';
 import { PassageInspector } from './PassageInspector';
 import { PassageNodeCard } from './PassageNodeCard';
+import { ValidationPanel } from './ValidationPanel';
 import {
   createDefaultEncounterNode,
   createDefaultPassageNode,
@@ -42,13 +44,29 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
 
   const nodes = useMemo(() => storyToFlowNodes(story, selectedNodeId), [story, selectedNodeId]);
   const edges = useMemo(() => storyToFlowEdges(story), [story]);
+  const validationMessages = useMemo(() => validateStory(story), [story]);
 
   const commitStory = useCallback(
     (next: Story) => {
-      saveStory(next);
+      try {
+        saveStory(next);
+      } catch {
+        // Keep draft editable in memory while ValidationPanel reports invalid fields.
+      }
       onStoryChange(next);
     },
     [onStoryChange],
+  );
+
+  const focusNode = useCallback(
+    (nodeId: string) => {
+      setSelectedNodeId(nodeId);
+      const target = story.nodes[nodeId];
+      if (target && rfInstance) {
+        rfInstance.setCenter(target.position.x + 110, target.position.y + 60, { zoom: 1 });
+      }
+    },
+    [rfInstance, story.nodes],
   );
 
   const handleNodesChange = useCallback(
@@ -229,6 +247,8 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
             <Controls />
           </ReactFlow>
         </div>
+
+        <ValidationPanel messages={validationMessages} onFocusNode={focusNode} />
       </div>
 
       <aside className="inspector-pane" aria-label="Node inspector">
@@ -237,11 +257,7 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
             {rfInstance && (
               <button
                 type="button"
-                onClick={() =>
-                  rfInstance.setCenter(selectedNode.position.x + 110, selectedNode.position.y + 60, {
-                    zoom: 1,
-                  })
-                }
+                onClick={() => focusNode(selectedNode.id)}
               >
                 Center on canvas
               </button>
@@ -250,7 +266,23 @@ function BuilderInner({ story, onStoryChange, onResetSeed }: StoryMapBuilderProp
               <EncounterInspector
                 node={selectedNode}
                 onUpdate={(nextEncounter) => {
-                  const next = updateEncounterNode(story, selectedNode.id, nextEncounter);
+                  const nextExitTargets: Record<string, string | null> = {};
+                  for (const exitKey of Object.keys(nextEncounter.exits)) {
+                    if (exitKey === 'retreat' && !nextEncounter.allowRetreat) continue;
+                    nextExitTargets[exitKey] = selectedNode.exitTargets[exitKey] ?? null;
+                  }
+                  const next: Story = {
+                    ...story,
+                    nodes: {
+                      ...story.nodes,
+                      [selectedNode.id]: {
+                        ...selectedNode,
+                        title: nextEncounter.enemy.name || selectedNode.title,
+                        encounter: nextEncounter,
+                        exitTargets: nextExitTargets,
+                      },
+                    },
+                  };
                   commitStory(next);
                 }}
               />

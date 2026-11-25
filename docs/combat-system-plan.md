@@ -14,10 +14,10 @@ The combat system in [combat-system-spec.md](combat-system-spec.md) is built in 
 
 ## Assumptions
 
-- The repository currently holds only a licence. The first ticket imports the existing app or scaffolds a new one.
-- The stack is React, Vite and TypeScript, with `@xyflow/react` v12 for the story map and a Postgres-backed store.
-- The engine lives in `src/combat/` and imports nothing from React, the story map library or the database client.
-- Tickets for the builder, the player and storage were written against the spec, not the code. Their storage details need adjusting to the app's real schema once it is in the repository.
+- The repository began with a licence; M0 scaffolded the app with React, Vite, and TypeScript.
+- The stack is React, Vite and TypeScript, with `@xyflow/react` v12 for the story map and browser `localStorage` + JSON persistence.
+- The engine lives in `src/combat/` and imports nothing from React, the story map library or the storage client.
+- Storage and builder details are aligned with the `src/story/` schema introduced in M3.
 
 ## Milestones
 

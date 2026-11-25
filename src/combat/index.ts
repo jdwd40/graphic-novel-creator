@@ -5,3 +5,4 @@ export * from './rng';
 export * from './resolver';
 export * from './captions';
 export * from './simulator';
+export * from './playerState';

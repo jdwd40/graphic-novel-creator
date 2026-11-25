@@ -6,6 +6,47 @@ import { getVisibleEncounterExitKeys } from './EncounterNodeCard';
 
 export type BuilderNode = Node;
 
+export type EdgeKind = 'choice' | 'victory' | 'defeat' | 'retreat' | 'custom';
+
+export interface EdgeStyleSpec {
+  stroke: string;
+  strokeWidth: number;
+  strokeDasharray?: string;
+}
+
+export const EDGE_STYLES: Record<EdgeKind, EdgeStyleSpec> = {
+  choice: { stroke: '#475569', strokeWidth: 2 },
+  victory: { stroke: '#15803d', strokeWidth: 2.5, strokeDasharray: '10 4' },
+  defeat: { stroke: '#b91c1c', strokeWidth: 2.5, strokeDasharray: '3 4' },
+  retreat: { stroke: '#b45309', strokeWidth: 2.5, strokeDasharray: '8 4 2 4' },
+  custom: { stroke: '#6d28d9', strokeWidth: 2.5, strokeDasharray: '5 3' },
+};
+
+function classifyExitEdgeKind(exitKey: string): EdgeKind {
+  if (exitKey === 'victory' || exitKey === 'defeat' || exitKey === 'retreat') {
+    return exitKey;
+  }
+  return 'custom';
+}
+
+function buildEdgePresentation(kind: EdgeKind) {
+  const style = EDGE_STYLES[kind];
+  return {
+    type: 'smoothstep',
+    style,
+    data: { edgeKind: kind },
+    labelStyle: { fontSize: 11, fontWeight: 700, fill: '#0f172a' },
+    labelBgStyle: {
+      fill: '#ffffff',
+      fillOpacity: 0.94,
+      stroke: style.stroke,
+      strokeWidth: 1,
+    },
+    labelBgPadding: [6, 3] as [number, number],
+    labelBgBorderRadius: 4,
+  };
+}
+
 export function storyToFlowNodes(story: Story, selectedNodeId: string | null): BuilderNode[] {
   return Object.values(story.nodes).map((node) => {
     if (node.kind === 'passage') {
@@ -39,6 +80,7 @@ export function storyToFlowEdges(story: Story): Edge[] {
             sourceHandle: choice.id,
             target: choice.targetNodeId,
             label: choice.label,
+            ...buildEdgePresentation('choice'),
           });
         }
       }
@@ -47,12 +89,14 @@ export function storyToFlowEdges(story: Story): Edge[] {
       for (const [exitKey, target] of Object.entries(node.exitTargets)) {
         if (!visibleExits.has(exitKey)) continue;
         if (target && story.nodes[target]) {
+          const kind = classifyExitEdgeKind(exitKey);
           edges.push({
             id: `${node.id}:${exitKey}->${target}`,
             source: node.id,
             sourceHandle: exitKey,
             target,
             label: node.encounter.exits[exitKey]?.label ?? exitKey,
+            ...buildEdgePresentation(kind),
           });
         }
       }

@@ -26,6 +26,7 @@ import { PassageNodeCard } from './PassageNodeCard';
 import { PlayFromHereModal } from './PlayFromHereModal';
 import { StorySettingsPanel } from './StorySettingsPanel';
 import { ValidationPanel } from './ValidationPanel';
+import { layoutStoryLeftToRight } from './layoutUtils';
 import { useStoryHistory } from './useStoryHistory';
 import {
   createAndLinkNodeFromHandle,
@@ -104,6 +105,7 @@ function BuilderInner({
   const [dropMenu, setDropMenu] = useState<DropMenuState | null>(null);
   const [playFromHereOpen, setPlayFromHereOpen] = useState(false);
   const [pendingDeleteNodeId, setPendingDeleteNodeId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const history = useStoryHistory(story.id);
 
   useEffect(() => {
@@ -466,6 +468,24 @@ function BuilderInner({
 
   const selectedNode = selectedNodeId ? story.nodes[selectedNodeId] ?? null : null;
 
+  const searchMatches = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return Object.values(story.nodes).filter((node) => {
+      if (node.title.toLowerCase().includes(q)) return true;
+      if (node.kind === 'passage') {
+        return node.text.toLowerCase().includes(q);
+      }
+      return node.encounter.enemy.name.toLowerCase().includes(q);
+    });
+  }, [searchQuery, story.nodes]);
+
+  const handleTidyUp = () => {
+    const arranged = layoutStoryLeftToRight(story);
+    commitStory(arranged);
+    rfInstance?.fitView({ padding: 0.18, maxZoom: 1 });
+  };
+
   return (
     <div className="builder-layout">
       <div className="builder-canvas-pane">
@@ -498,6 +518,9 @@ function BuilderInner({
           >
             Redo
           </button>
+          <button type="button" onClick={handleTidyUp}>
+            Tidy up
+          </button>
           <button
             type="button"
             aria-pressed={sideTab === 'items'}
@@ -519,6 +542,47 @@ function BuilderInner({
           >
             Story settings
           </button>
+          <div className="builder-search-wrap">
+            <input
+              type="search"
+              className="builder-search-input"
+              aria-label="Search story nodes"
+              placeholder="Search passages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchMatches.length > 0) {
+                  e.preventDefault();
+                  focusNode(searchMatches[0].id);
+                  setSearchQuery('');
+                }
+              }}
+            />
+            {searchQuery.trim() !== '' && (
+              <div className="builder-search-results" role="listbox" aria-label="Search matches">
+                {searchMatches.length === 0 ? (
+                  <div className="builder-search-empty">No matching nodes</div>
+                ) : (
+                  searchMatches.map((match) => (
+                    <button
+                      key={match.id}
+                      type="button"
+                      role="option"
+                      aria-selected={match.id === selectedNodeId}
+                      className="builder-search-option"
+                      onClick={() => {
+                        focusNode(match.id);
+                        setSearchQuery('');
+                      }}
+                    >
+                      <strong>{match.title}</strong>
+                      <span>{match.kind === 'passage' ? 'Passage' : 'Encounter'}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {pendingDeleteNodeId && story.nodes[pendingDeleteNodeId] && (

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { selectEncounterArt } from '../combat/art';
 import { nextTell, selectResultCaption } from '../combat/captions';
 import { evaluateCondition } from '../combat/conditions';
-import { getArmourBuffer, getEffectiveMaxHealth, getWeaponDamage } from '../combat/playerState';
+import { getArmourBuffer, getEffectiveMaxHealth } from '../combat/playerState';
 import {
   advanceBeat,
   finishFight,
@@ -31,11 +31,13 @@ import { useImageUrl } from '../story/useImageUrl';
 import { ChoiceList } from './ChoiceList';
 import { CombatScreen, type CombatFeedbackState } from './CombatScreen';
 import { EndOfFightPage } from './EndOfFightPage';
+import { ReaderHud } from './ReaderHud';
 import { deriveHitFeedback } from './hitFeedback';
 
 export interface StoryPlayerProps {
   story: Story;
   initialPlaythrough?: PlaythroughState;
+  onExitToBuilder?: () => void;
 }
 
 export function applyFightOutcomeToPlaythrough(
@@ -83,7 +85,11 @@ export function applyFightOutcomeToPlaythrough(
   };
 }
 
-export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
+export function StoryPlayer({
+  story,
+  initialPlaythrough,
+  onExitToBuilder,
+}: StoryPlayerProps) {
   const [playthrough, setPlaythrough] = useState<PlaythroughState>(() => {
     if (initialPlaythrough) return initialPlaythrough;
     return loadPlaythrough(story.id) ?? createPlaythrough(story);
@@ -415,41 +421,34 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     ? liveFight.playerBuffer
     : getArmourBuffer(playthrough.combat);
 
+  const maxArmourBuffer = liveFight
+    ? liveFight.playerMaxBuffer
+    : getArmourBuffer(playthrough.combat);
+
   return (
     <div className="player-shell" data-testid="story-player">
-      <div className="player-status-bar">
-        <span data-testid="player-hp-summary">
-          Health: {displayedHealth}/{effectiveMax}
-        </span>
-        <span>Weapon: {getWeaponDamage(playthrough.combat)} dmg</span>
-        <span data-testid="player-armour-summary">Armour: {displayedArmour} buf</span>
-        <label className="auto-advance-toggle">
-          <input
-            type="checkbox"
-            checked={readerSettings.autoAdvance}
-            onChange={(e) => handleToggleAutoAdvance(e.target.checked)}
-          />
-          Auto-advance
-        </label>
-        <button type="button" onClick={() => setShowInventory((v) => !v)}>
-          {showInventory ? 'Hide gear' : 'Gear & wounds'}
-        </button>
-        <button type="button" onClick={handleRestart}>
-          Restart story
-        </button>
-      </div>
+      <ReaderHud
+        health={displayedHealth}
+        maxHealth={effectiveMax}
+        armour={displayedArmour}
+        maxArmour={maxArmourBuffer}
+        satchelOpen={showInventory}
+        autoAdvance={readerSettings.autoAdvance}
+        onToggleSatchel={() => setShowInventory((v) => !v)}
+        onToggleAutoAdvance={handleToggleAutoAdvance}
+        onRestart={handleRestart}
+        onExitToBuilder={onExitToBuilder}
+      />
 
       {showInventory && (
         <section className="story-caption-box" aria-label="Gear and wounds">
           <div>
             <strong>Weapon:</strong>{' '}
-            {playthrough.combat.weapon?.name ?? 'Bare hands'} (damage{' '}
-            {getWeaponDamage(playthrough.combat)})
+            {playthrough.combat.weapon?.name ?? 'Bare hands'}
           </div>
           <div>
             <strong>Armour:</strong>{' '}
-            {playthrough.combat.armour?.name ?? 'None'} (buffer{' '}
-            {getArmourBuffer(playthrough.combat)})
+            {playthrough.combat.armour?.name ?? 'No armour'}
           </div>
           <div>
             <strong>Wounds:</strong>{' '}

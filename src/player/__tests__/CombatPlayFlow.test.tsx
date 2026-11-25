@@ -28,9 +28,9 @@ describe('StoryPlayer combat beat flow and exits', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(screen.getByTestId('passage-view-passage_shrine')).toBeInTheDocument();
-    expect(screen.getByTestId('player-hp-summary')).toHaveTextContent('Health: 4/6');
+    expect(screen.getByRole('img', { name: 'Reader health 4 of 6, armour 2' })).toBeInTheDocument();
 
-    // Entering next fight refills buffer to full (mail_hauberk = 4 after shrine choice, or test without rest).
+    // Entering next fight refills buffer to full (mail_hauberk = 4 after shrine choice).
     fireEvent.click(screen.getByRole('button', { name: /rest by the hearth/i }));
     expect(screen.getByRole('img', { name: 'Health 6 of 6, armour 4' })).toBeInTheDocument();
   });
@@ -55,7 +55,7 @@ describe('StoryPlayer combat beat flow and exits', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(screen.getByTestId('passage-view-passage_defeat_cell')).toBeInTheDocument();
-    expect(screen.getByTestId('player-hp-summary')).toHaveTextContent('Health: 1/5');
+    expect(screen.getByRole('img', { name: 'Reader health 1 of 5, armour 2' })).toBeInTheDocument();
   });
 
   it('arrives at the Retreat passage after one enemy Strike when Retreat is pressed', () => {
@@ -75,7 +75,7 @@ describe('StoryPlayer combat beat flow and exits', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(screen.getByTestId('passage-view-passage_retreat_alley')).toBeInTheDocument();
-    expect(screen.getByTestId('player-hp-summary')).toHaveTextContent('Health: 5/6');
+    expect(screen.getByRole('img', { name: 'Reader health 5 of 6, armour 0' })).toBeInTheDocument();
   });
 
   it('keeps health lost in the next passage and refills buffer on a subsequent encounter', () => {

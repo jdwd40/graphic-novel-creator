@@ -9,6 +9,123 @@
   gap: 0.75rem;
 }
 
+.reader-hud-wrap {
+  position: relative;
+}
+
+.reader-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-height: 36px;
+  max-height: 44px;
+  padding: 0.2rem 0.45rem;
+  background: #16181d;
+  color: #f8fafc;
+  border-radius: 8px;
+  border: 2px solid #16181d;
+}
+
+.reader-hud__pips {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.reader-hud .pip-row {
+  padding: 0.15rem 0.35rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+}
+
+.reader-hud__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.reader-hud__btn {
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #16181d;
+  border-radius: 5px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.reader-hud__btn--subtle {
+  background: transparent;
+  color: #f8fafc;
+  border-color: rgba(248, 250, 252, 0.4);
+}
+
+.reader-menu-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 40;
+  min-width: 220px;
+  background: #ffffff;
+  color: #0f172a;
+  border: 2px solid #16181d;
+  border-radius: 8px;
+  padding: 0.6rem;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reader-menu__row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reader-menu__btn {
+  cursor: pointer;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #94a3b8;
+  border-radius: 5px;
+  background: #f8fafc;
+  color: #0f172a;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.reader-menu__btn--danger {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.reader-menu__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.45rem;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.reader-menu__confirm-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
 .combat-screen {
   width: 100%;
   max-width: 520px;

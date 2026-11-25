@@ -26,6 +26,7 @@ describe('Auto-advance reader setting', () => {
     };
     render(<StoryPlayer story={story} initialPlaythrough={pt} />);
 
+    fireEvent.click(screen.getByRole('button', { name: /reader menu/i }));
     const toggle = screen.getByLabelText(/auto-advance/i) as HTMLInputElement;
     expect(toggle.checked).toBe(false);
 
@@ -48,6 +49,7 @@ describe('Auto-advance reader setting', () => {
     };
     render(<StoryPlayer story={story} initialPlaythrough={pt} />);
 
+    fireEvent.click(screen.getByRole('button', { name: /reader menu/i }));
     fireEvent.click(screen.getByLabelText(/auto-advance/i));
     expect(loadReaderSettings().autoAdvance).toBe(true);
 
@@ -63,6 +65,7 @@ describe('Auto-advance reader setting', () => {
     // Persists across remount
     cleanup();
     render(<StoryPlayer story={story} />);
+    fireEvent.click(screen.getByRole('button', { name: /reader menu/i }));
     expect((screen.getByLabelText(/auto-advance/i) as HTMLInputElement).checked).toBe(true);
   });
 
@@ -85,6 +88,7 @@ describe('Auto-advance reader setting', () => {
       },
     };
     render(<StoryPlayer story={story} initialPlaythrough={pt} />);
+    fireEvent.click(screen.getByRole('button', { name: /reader menu/i }));
     fireEvent.click(screen.getByLabelText(/auto-advance/i));
 
     // Advance most of the delay, then touch tactic bar to restart timer.

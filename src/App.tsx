@@ -84,39 +84,40 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <h1 className="app-title">Graphic Novel Creator</h1>
-        <nav className="app-nav" aria-label="Workspace mode">
-          <button
-            type="button"
-            className={mode === 'library' ? 'is-active' : ''}
-            onClick={() => {
-              refreshStories();
-              setMode('library');
-            }}
-          >
-            Stories
-          </button>
-          {activeStory && (
-            <>
-              <button
-                type="button"
-                className={mode === 'builder' ? 'is-active' : ''}
-                onClick={() => setMode('builder')}
-              >
-                Story Builder
-              </button>
-              <button
-                type="button"
-                className={mode === 'player' ? 'is-active' : ''}
-                onClick={() => setMode('player')}
-              >
-                Play Story
-              </button>
-            </>
-          )}
-        </nav>
-      </header>
+      {mode !== 'player' && (
+        <header className="app-header">
+          <h1 className="app-title">Graphic Novel Creator</h1>
+          <nav className="app-nav" aria-label="Workspace mode">
+            <button
+              type="button"
+              className={mode === 'library' ? 'is-active' : ''}
+              onClick={() => {
+                refreshStories();
+                setMode('library');
+              }}
+            >
+              Stories
+            </button>
+            {activeStory && (
+              <>
+                <button
+                  type="button"
+                  className={mode === 'builder' ? 'is-active' : ''}
+                  onClick={() => setMode('builder')}
+                >
+                  Story Builder
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('player')}
+                >
+                  Play Story
+                </button>
+              </>
+            )}
+          </nav>
+        </header>
+      )}
       <main className="app-main" style={{ padding: 0 }}>
         {mode === 'library' ? (
           <StoryLibrary
@@ -143,7 +144,11 @@ export function App() {
             onStoryChange={handleStoryChange}
           />
         ) : activeStory ? (
-          <StoryPlayer key={activeStory.id} story={activeStory} />
+          <StoryPlayer
+            key={activeStory.id}
+            story={activeStory}
+            onExitToBuilder={() => setMode('builder')}
+          />
         ) : (
           <StoryLibrary
             stories={stories}

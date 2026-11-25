@@ -78,7 +78,7 @@ describe('exit effects, wounds, and manner flags', () => {
     ]);
     render(<StoryPlayer story={story} initialPlaythrough={pt} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /gear & wounds/i }));
+    fireEvent.click(screen.getByRole('button', { name: /open satchel/i }));
     expect(
       screen.getByText(/Cracked rib \(Sharp pain when drawing breath\.\)/i),
     ).toBeInTheDocument();

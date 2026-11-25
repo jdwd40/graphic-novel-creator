@@ -29,7 +29,7 @@ describe('Save and resume a fight in progress', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Guard' }));
 
     const tellBeforeReload = screen.getByTestId('combat-tell-caption').textContent;
-    const hpBeforeReload = screen.getByRole('img', { name: /Health \d+ of 6/i }).getAttribute(
+    const hpBeforeReload = screen.getByRole('img', { name: /^Health \d+ of 6/i }).getAttribute(
       'aria-label',
     );
 
@@ -40,7 +40,7 @@ describe('Save and resume a fight in progress', () => {
     expect(screen.getByTestId('combat-screen')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Guard' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('combat-tell-caption').textContent).toBe(tellBeforeReload);
-    expect(screen.getByRole('img', { name: /Health \d+ of 6/i }).getAttribute('aria-label')).toBe(
+    expect(screen.getByRole('img', { name: /^Health \d+ of 6/i }).getAttribute('aria-label')).toBe(
       hpBeforeReload,
     );
     expect(loadPlaythrough(story.id)?.activeFight?.fight.beatNumber).toBe(1);
@@ -145,7 +145,7 @@ describe('Save and resume a fight in progress', () => {
     expect(loadPlaythrough(story.id)?.activeFight).toBeNull();
   });
 
-  it('keeps status bar health and armour synchronized with fight pips when taking damage past buffer and after reload (#66)', () => {
+  it('keeps HUD health and armour synchronized with fight pips when taking damage past buffer and after reload (#66, #47)', () => {
     const story = createSeedStory();
     const pt = {
       ...createPlaythrough(story),
@@ -160,20 +160,18 @@ describe('Save and resume a fight in progress', () => {
 
     // Beat 1: Brute Strike (Hit 2) drains the 2 armour buffer
     fireEvent.click(screen.getByTestId('combat-tap-zone'));
-    expect(screen.getByTestId('player-hp-summary')).toHaveTextContent('Health: 6/6');
-    expect(screen.getByTestId('player-armour-summary')).toHaveTextContent('Armour: 0 buf');
+    expect(screen.getByRole('img', { name: 'Reader health 6 of 6, armour 0' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Health 6 of 6, armour 0' })).toBeInTheDocument();
 
     // Beat 2: Brute Heavy (2*Hit = 4 on Steady) deals 4 damage straight to health -> 2/6
     fireEvent.click(screen.getByTestId('combat-tap-zone'));
-    expect(screen.getByTestId('player-hp-summary')).toHaveTextContent('Health: 2/6');
+    expect(screen.getByRole('img', { name: 'Reader health 2 of 6, armour 0' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Health 2 of 6, armour 0' })).toBeInTheDocument();
 
     // Simulate reload mid-fight -> bar and pips still match
     cleanup();
     render(<StoryPlayer story={story} />);
-    expect(screen.getByTestId('player-hp-summary')).toHaveTextContent('Health: 2/6');
-    expect(screen.getByTestId('player-armour-summary')).toHaveTextContent('Armour: 0 buf');
+    expect(screen.getByRole('img', { name: 'Reader health 2 of 6, armour 0' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Health 2 of 6, armour 0' })).toBeInTheDocument();
   });
 });

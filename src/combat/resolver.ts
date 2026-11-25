@@ -8,6 +8,8 @@ import type {
   ExitKey,
   FightResult,
   FightState,
+  Moment,
+  MomentChoice,
   Move,
   PlayerCombatState,
   StoryStateSnapshot,
@@ -129,6 +131,155 @@ export function startFight(
   };
 }
 
+function matchesMomentTrigger(
+  moment: Moment,
+  state: FightState,
+  enteredPhases: number[],
+): boolean {
+  const { trigger } = moment;
+  if ('enemyHealthAtMost' in trigger) {
+    return state.enemyHealth <= trigger.enemyHealthAtMost;
+  }
+  if ('playerHealthAtMost' in trigger) {
+    return state.playerHealth <= trigger.playerHealthAtMost;
+  }
+  if ('beat' in trigger) {
+    return state.beatNumber === trigger.beat;
+  }
+  if ('phaseStart' in trigger) {
+    return enteredPhases.includes(trigger.phaseStart);
+  }
+  return false;
+}
+
+function collectDueMoments(
+  state: FightState,
+  encounter: Encounter,
+  enteredPhases: number[],
+): { firedMoments: number[]; pendingMomentQueue: number[]; events: BeatEvent[] } {
+  const moments = encounter.moments ?? [];
+  if (moments.length === 0 || state.enemyHealth <= 0 || state.playerHealth <= 0) {
+    return {
+      firedMoments: state.firedMoments,
+      pendingMomentQueue: state.pendingMomentQueue,
+      events: [],
+    };
+  }
+
+  const fired = [...state.firedMoments];
+  const queue = [...state.pendingMomentQueue];
+  const events: BeatEvent[] = [];
+
+  moments.forEach((moment, idx) => {
+    if (fired.includes(idx)) return;
+    if (matchesMomentTrigger(moment, state, enteredPhases)) {
+      fired.push(idx);
+      queue.push(idx);
+      events.push({ type: 'momentTriggered', momentIndex: idx });
+    }
+  });
+
+  return { firedMoments: fired, pendingMomentQueue: queue, events };
+}
+
+export function getActiveMoment(
+  state: FightState,
+  encounter: Encounter,
+): { index: number; moment: Moment } | null {
+  const idx = state.pendingMomentQueue[0];
+  if (idx === undefined) return null;
+  const moment = encounter.moments?.[idx];
+  if (!moment) return null;
+  return { index: idx, moment };
+}
+
+export interface AvailableMomentChoice {
+  choiceIndex: number;
+  choice: MomentChoice;
+}
+
+export function getAvailableMomentChoices(
+  state: FightState,
+  encounter: Encounter,
+  storyState: StoryStateSnapshot = EMPTY_STORY_STATE,
+): AvailableMomentChoice[] {
+  const active = getActiveMoment(state, encounter);
+  if (!active) return [];
+
+  const available: AvailableMomentChoice[] = [];
+  active.moment.choices.forEach((choice, choiceIndex) => {
+    if (choice.requiresUnlock && !state.unlockedChoices.includes(choice.requiresUnlock)) {
+      return;
+    }
+    if (choice.condition && !evaluateCondition(choice.condition, storyState)) {
+      return;
+    }
+    available.push({ choiceIndex, choice });
+  });
+  return available;
+}
+
+export function resolveMomentChoice(
+  state: FightState,
+  encounter: Encounter,
+  choiceIndex: number,
+  storyState: StoryStateSnapshot = EMPTY_STORY_STATE,
+): ResolveBeatResult {
+  const active = getActiveMoment(state, encounter);
+  if (!active) {
+    throw new Error('No open moment to resolve.');
+  }
+  const available = getAvailableMomentChoices(state, encounter, storyState);
+  const picked = available.find((c) => c.choiceIndex === choiceIndex);
+  if (!picked) {
+    throw new Error(`Moment choice ${choiceIndex} is not available.`);
+  }
+
+  const remainingQueue = state.pendingMomentQueue.slice(1);
+  const events: BeatEvent[] = [];
+
+  if (picked.choice.then === 'exit') {
+    const exitKey: ExitKey = picked.choice.exit ?? 'victory';
+    return {
+      state: {
+        ...state,
+        pendingMomentQueue: [],
+        status: 'finished',
+        exitKey,
+      },
+      events,
+    };
+  }
+
+  let nextEnemyHealth = state.enemyHealth;
+  if (typeof picked.choice.enemyHealthDelta === 'number') {
+    nextEnemyHealth = Math.max(0, nextEnemyHealth + picked.choice.enemyHealthDelta);
+  }
+
+  if (nextEnemyHealth === 0) {
+    events.push({ type: 'enemyDefeated' });
+    return {
+      state: {
+        ...state,
+        enemyHealth: 0,
+        pendingMomentQueue: [],
+        status: 'finished',
+        exitKey: 'victory',
+      },
+      events,
+    };
+  }
+
+  return {
+    state: {
+      ...state,
+      enemyHealth: nextEnemyHealth,
+      pendingMomentQueue: remainingQueue,
+    },
+    events,
+  };
+}
+
 export function advanceBeat(
   state: FightState,
   encounter: Encounter,
@@ -137,10 +288,14 @@ export function advanceBeat(
   if (state.status === 'finished') {
     throw new Error('Cannot advance a fight that has already finished.');
   }
+  if (state.pendingMomentQueue.length > 0) {
+    throw new Error('Cannot resolve a beat while a moment is open.');
+  }
 
   const { state: resolved, events } = resolveBeat(state, encounter, tactic);
   let status: FightState['status'] = resolved.status;
   let exitKey: ExitKey | null = resolved.exitKey;
+  let nextState = resolved;
 
   if (resolved.enemyHealth === 0) {
     status = 'finished';
@@ -148,11 +303,21 @@ export function advanceBeat(
   } else if (resolved.playerHealth === 0) {
     status = 'finished';
     exitKey = 'defeat';
+  } else {
+    const due = collectDueMoments(resolved, encounter, []);
+    if (due.events.length > 0) {
+      events.push(...due.events);
+      nextState = {
+        ...resolved,
+        firedMoments: due.firedMoments,
+        pendingMomentQueue: due.pendingMomentQueue,
+      };
+    }
   }
 
   return {
     state: {
-      ...resolved,
+      ...nextState,
       status,
       exitKey,
     },

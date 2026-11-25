@@ -1,5 +1,12 @@
+import { EMPTY_STORY_STATE } from './conditions';
 import { BASE_PLAYER_HEALTH, GEAR_TIERS, type GearTierConfig } from './constants';
-import { advanceBeat, getUpcomingMove, startFight } from './resolver';
+import {
+  advanceBeat,
+  getAvailableMomentChoices,
+  getUpcomingMove,
+  resolveMomentChoice,
+  startFight,
+} from './resolver';
 import type {
   Encounter,
   FightState,
@@ -106,6 +113,22 @@ export function simulate(
     const step = advanceBeat(state, encounter, tactic);
     beatsPerPhase[phaseBefore] += 1;
     state = step.state;
+
+    while (state.status === 'ongoing' && state.pendingMomentQueue.length > 0) {
+      const choices = getAvailableMomentChoices(
+        state,
+        encounter,
+        options.storyState ?? EMPTY_STORY_STATE,
+      );
+      if (choices.length === 0) break;
+      const preferred = choices.find((c) => c.choice.then === 'continue') ?? choices[0];
+      state = resolveMomentChoice(
+        state,
+        encounter,
+        preferred.choiceIndex,
+        options.storyState ?? EMPTY_STORY_STATE,
+      ).state;
+    }
   }
 
   let outcome: SimulationOutcome;

@@ -295,7 +295,7 @@ These mechanics are excluded on purpose. Each one either adds a second game to l
 Six decisions are still open:
 
 - [x] **Confirmed (Issue #2):** Armour stays a per-fight buffer (tiers 2, 4, and 6 pips) that absorbs damage before health and refills after every fight.
-- [ ] Guarding everything except Open beats is slow but slightly safer against a Tough Brute at tier 1: 9 beats and 1 health lost, against 6 beats and 2 for careful play. Decide whether a beat cap is needed.
+- [x] **Confirmed (Issue #11):** No beat cap for now. Simulations across all nine Weak/Standard/Tough preset combinations at tier 1 show careful play wins faster everywhere (3–6 beats vs 6–12) and loses equal or less health in 8 of 9 matchups (Tough Brute is the sole 1 HP trade-off at 9 beats vs 6).
 - [ ] Health only returns through story effects. Decide whether the app should offer a standard "rest" effect so creators do not starve readers by accident.
 - [x] **Confirmed (Issue #3):** Retreat costs one free enemy Strike (resolved as if on Steady); if that Strike takes the player to 0 health, the fight leaves by Defeat. Per-encounter pricing is deferred until creators ask for it.
 - [ ] Enemy health shows as exact pips. A vaguer state such as fresh, hurt and staggering would read more like a story but hides the race.

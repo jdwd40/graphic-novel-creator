@@ -176,7 +176,11 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
     };
     updatePlaythrough({
       ...playthrough,
-      activeFight: { encounterId: currentNode.id, fight: updatedFight },
+      activeFight: {
+        encounterId: currentNode.id,
+        fight: updatedFight,
+        lastResultCaption: active.lastResultCaption,
+      },
     });
   };
 
@@ -214,7 +218,11 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
 
     updatePlaythrough({
       ...playthrough,
-      activeFight: { encounterId: currentNode.id, fight: step.state },
+      activeFight: {
+        encounterId: currentNode.id,
+        fight: step.state,
+        lastResultCaption: caption,
+      },
     });
   };
 
@@ -294,7 +302,11 @@ export function StoryPlayer({ story, initialPlaythrough }: StoryPlayerProps) {
         <CombatScreen
           encounter={currentNode.encounter}
           fightState={playthrough.activeFight.fight}
-          resultCaption={resultCaption || `${currentNode.encounter.enemy.name} bars your path.`}
+          resultCaption={
+            playthrough.activeFight.lastResultCaption ||
+            resultCaption ||
+            `${currentNode.encounter.enemy.name} bars your path.`
+          }
           feedback={feedback}
           onAdvanceBeat={handleAdvanceBeat}
           onSelectTactic={handleSelectTactic}

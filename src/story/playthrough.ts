@@ -10,6 +10,7 @@ import type { Story, StoryEffect } from './types';
 export interface ActiveFightRecord {
   encounterId: string;
   fight: FightState;
+  lastResultCaption?: string;
 }
 
 export interface PlaythroughState {

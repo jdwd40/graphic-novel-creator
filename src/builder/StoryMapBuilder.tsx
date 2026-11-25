@@ -14,6 +14,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { deleteNode, saveStory, setExitTarget } from '../story/store';
+import type { PlaythroughState } from '../story/playthrough';
 import type { Story, StoryNode } from '../story/types';
 import { validateStory } from '../story/validation';
 import { EncounterInspector } from './EncounterInspector';
@@ -22,6 +23,7 @@ import { ImageLibraryPanel } from './ImageLibraryPanel';
 import { ItemsPanel } from './ItemsPanel';
 import { PassageInspector } from './PassageInspector';
 import { PassageNodeCard } from './PassageNodeCard';
+import { PlayFromHereModal } from './PlayFromHereModal';
 import { StorySettingsPanel } from './StorySettingsPanel';
 import { ValidationPanel } from './ValidationPanel';
 import {
@@ -40,7 +42,9 @@ const nodeTypes = {
 
 export interface StoryMapBuilderProps {
   story: Story;
+  initialSelectedNodeId?: string | null;
   onStoryChange: (nextStory: Story) => void;
+  onPlayFromHere?: (playthrough: PlaythroughState, returnNodeId: string) => void;
 }
 
 interface DropMenuState {
@@ -51,13 +55,29 @@ interface DropMenuState {
   flowPos: { x: number; y: number };
 }
 
-function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(story.startNodeId);
+function BuilderInner({
+  story,
+  initialSelectedNodeId,
+  onStoryChange,
+  onPlayFromHere,
+}: StoryMapBuilderProps) {
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(() =>
+    initialSelectedNodeId && story.nodes[initialSelectedNodeId]
+      ? initialSelectedNodeId
+      : story.startNodeId,
+  );
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [sideTab, setSideTab] = useState<'inspector' | 'items' | 'images' | 'settings'>('inspector');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [dropMenu, setDropMenu] = useState<DropMenuState | null>(null);
+  const [playFromHereOpen, setPlayFromHereOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialSelectedNodeId && story.nodes[initialSelectedNodeId]) {
+      setSelectedNodeId(initialSelectedNodeId);
+    }
+  }, [initialSelectedNodeId, story.nodes]);
   const flowWrapRef = useRef<HTMLDivElement | null>(null);
   const connectingRef = useRef<{ nodeId: string; handleId: string } | null>(null);
   const didConnectRef = useRef(false);
@@ -512,13 +532,35 @@ function BuilderInner({ story, onStoryChange }: StoryMapBuilderProps) {
           />
         ) : selectedNode ? (
           <>
-            {rfInstance && (
-              <button
-                type="button"
-                onClick={() => focusNode(selectedNode.id)}
-              >
-                Center on canvas
-              </button>
+            <div className="inspector-node-actions">
+              {rfInstance && (
+                <button
+                  type="button"
+                  onClick={() => focusNode(selectedNode.id)}
+                >
+                  Center on canvas
+                </button>
+              )}
+              {onPlayFromHere && (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => setPlayFromHereOpen(true)}
+                >
+                  Play from here
+                </button>
+              )}
+            </div>
+            {playFromHereOpen && onPlayFromHere && (
+              <PlayFromHereModal
+                story={story}
+                node={selectedNode}
+                onClose={() => setPlayFromHereOpen(false)}
+                onStart={(pt) => {
+                  setPlayFromHereOpen(false);
+                  onPlayFromHere(pt, selectedNode.id);
+                }}
+              />
             )}
             {selectedNode.kind === 'encounter' ? (
               <EncounterInspector

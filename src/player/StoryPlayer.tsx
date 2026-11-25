@@ -43,6 +43,8 @@ export interface StoryPlayerProps {
   story: Story;
   initialPlaythrough?: PlaythroughState;
   showTitleScreen?: boolean;
+  persist?: boolean;
+  testPlayBanner?: string;
   onExitToBuilder?: () => void;
 }
 
@@ -95,12 +97,14 @@ export function StoryPlayer({
   story,
   initialPlaythrough,
   showTitleScreen,
+  persist = true,
+  testPlayBanner,
   onExitToBuilder,
 }: StoryPlayerProps) {
   const [onTitleScreen, setOnTitleScreen] = useState<boolean>(
     () => showTitleScreen ?? !initialPlaythrough,
   );
-  const savedOnMount = loadPlaythrough(story.id);
+  const savedOnMount = persist ? loadPlaythrough(story.id) : null;
   const [playthrough, setPlaythrough] = useState<PlaythroughState>(() => {
     if (initialPlaythrough) return initialPlaythrough;
     return savedOnMount ?? createPlaythrough(story);
@@ -149,15 +153,22 @@ export function StoryPlayer({
       ...playthrough,
       activeFight: { encounterId: currentNode.id, fight: started },
     };
-    savePlaythrough(nextPt);
+    if (persist) {
+      savePlaythrough(nextPt);
+    }
     setPlaythrough(nextPt);
     setResultCaption(`${currentNode.encounter.enemy.name} bars your path.`);
-  }, [currentNode, onTitleScreen, playthrough]);
+  }, [currentNode, onTitleScreen, persist, playthrough]);
 
-  const updatePlaythrough = useCallback((next: PlaythroughState) => {
-    savePlaythrough(next);
-    setPlaythrough(next);
-  }, []);
+  const updatePlaythrough = useCallback(
+    (next: PlaythroughState) => {
+      if (persist) {
+        savePlaythrough(next);
+      }
+      setPlaythrough(next);
+    },
+    [persist],
+  );
 
   const handleToggleAutoAdvance = (checked: boolean) => {
     const nextSettings: ReaderSettings = { ...readerSettings, autoAdvance: checked };
@@ -534,6 +545,17 @@ export function StoryPlayer({
 
   return (
     <div className="player-shell" data-testid="story-player">
+      {testPlayBanner && (
+        <div className="test-play-banner" role="status" data-testid="test-play-banner">
+          <span>{testPlayBanner}</span>
+          {onExitToBuilder && (
+            <button type="button" className="reader-hud__btn" onClick={onExitToBuilder}>
+              Back to builder
+            </button>
+          )}
+        </div>
+      )}
+
       <ReaderHud
         health={displayedHealth}
         maxHealth={effectiveMax}

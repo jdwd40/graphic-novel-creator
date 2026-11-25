@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { StoryMapBuilder } from './builder/StoryMapBuilder';
 import { StoryLibrary } from './library/StoryLibrary';
 import { StoryPlayer } from './player/StoryPlayer';
+import type { PlaythroughState } from './story/playthrough';
 import {
   createBlankStory,
   deleteStory,
@@ -21,6 +22,11 @@ export function App() {
   });
   const [activeStoryId, setActiveStoryId] = useState<string>(() => stories[0]?.id ?? 'iron-bell');
   const [mode, setMode] = useState<'library' | 'builder' | 'player'>('library');
+  const [builderSelectedNodeId, setBuilderSelectedNodeId] = useState<string | null>(null);
+  const [testSession, setTestSession] = useState<{
+    playthrough: PlaythroughState;
+    returnNodeId: string;
+  } | null>(null);
 
   const refreshStories = useCallback(() => {
     setStories(listStories());
@@ -125,10 +131,13 @@ export function App() {
             onCreateBlank={handleCreateBlank}
             onOpenDemo={handleOpenDemo}
             onOpenBuilder={(id) => {
+              setTestSession(null);
+              setBuilderSelectedNodeId(null);
               setActiveStoryId(id);
               setMode('builder');
             }}
             onOpenPlayer={(id) => {
+              setTestSession(null);
               setActiveStoryId(id);
               setMode('player');
             }}
@@ -141,7 +150,26 @@ export function App() {
           <StoryMapBuilder
             key={activeStory.id}
             story={activeStory}
+            initialSelectedNodeId={builderSelectedNodeId}
             onStoryChange={handleStoryChange}
+            onPlayFromHere={(pt, returnNodeId) => {
+              setTestSession({ playthrough: pt, returnNodeId });
+              setMode('player');
+            }}
+          />
+        ) : activeStory && testSession ? (
+          <StoryPlayer
+            key={`test-${activeStory.id}-${testSession.returnNodeId}`}
+            story={activeStory}
+            initialPlaythrough={testSession.playthrough}
+            showTitleScreen={false}
+            persist={false}
+            testPlayBanner="Test playthrough — real save untouched"
+            onExitToBuilder={() => {
+              setBuilderSelectedNodeId(testSession.returnNodeId);
+              setTestSession(null);
+              setMode('builder');
+            }}
           />
         ) : activeStory ? (
           <StoryPlayer

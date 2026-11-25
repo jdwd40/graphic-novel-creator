@@ -288,6 +288,29 @@
   flex: 1;
 }
 
+.caption-pool {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.caption-pool__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.caption-pool input[type='text'] {
+  padding: 0.35rem 0.45rem;
+  border: 1px solid #94a3b8;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
 @media (max-width: 900px) {
   .builder-layout {
     grid-template-columns: 1fr;

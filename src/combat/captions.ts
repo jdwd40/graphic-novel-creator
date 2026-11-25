@@ -127,7 +127,7 @@ export function getTellPool(
   if (clarity === 'hidden') {
     return [];
   }
-  const custom = encounter.captions?.tell?.[move];
+  const custom = encounter.captions?.tell?.[move]?.filter((line) => line.trim() !== '');
   if (custom && custom.length > 0) {
     return custom;
   }
@@ -140,7 +140,7 @@ export function getResultPool(
   key: ResultCaptionKey,
   encounter: Encounter,
 ): readonly string[] {
-  const custom = encounter.captions?.result?.[key];
+  const custom = encounter.captions?.result?.[key]?.filter((line) => line.trim() !== '');
   if (custom && custom.length > 0) {
     return custom;
   }

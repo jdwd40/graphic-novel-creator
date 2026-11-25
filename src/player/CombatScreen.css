@@ -617,6 +617,40 @@
   background: #fef3c7;
 }
 
+.combat-advance-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.combat-next-btn {
+  width: 100%;
+  min-height: 46px;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #16181d;
+  background: #1d4ed8;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.98rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #16181d;
+}
+
+.combat-next-btn:hover:not(:disabled) {
+  background: #1e40af;
+}
+
+.combat-next-btn:disabled {
+  background: #cbd5e1;
+  color: #475569;
+  border-color: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 .combat-tap-hint {
   margin: 0;
   text-align: center;

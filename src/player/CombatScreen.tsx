@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { selectEncounterArt } from '../combat/art';
 import { nextTell } from '../combat/captions';
 import { EMPTY_STORY_STATE } from '../combat/conditions';
@@ -37,6 +38,7 @@ export interface CombatScreenProps {
   resultCaption: string;
   artSrc?: string;
   feedback?: CombatFeedbackState;
+  keyboardBlocked?: boolean;
   onAdvanceBeat: () => void;
   onSelectTactic: (tactic: Tactic) => void;
   onRetreat: () => void;
@@ -51,6 +53,7 @@ export function CombatScreen({
   resultCaption,
   artSrc,
   feedback,
+  keyboardBlocked = false,
   onAdvanceBeat,
   onSelectTactic,
   onRetreat,
@@ -59,6 +62,33 @@ export function CombatScreen({
   const tell = nextTell(fightState, encounter);
   const activeMoment = getActiveMoment(fightState, encounter);
   const hasOpenMoment = activeMoment !== null;
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (keyboardBlocked || hasOpenMoment || fightState.status !== 'ongoing' || event.repeat) {
+        return;
+      }
+      if (event.key !== ' ' && event.key !== 'Enter') {
+        return;
+      }
+      const isInteractive = (el: EventTarget | null): boolean => {
+        if (!(el instanceof Element)) return false;
+        const tag = el.tagName;
+        if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'A') {
+          return true;
+        }
+        return Boolean(el.closest('button, a, input, textarea, select, [role="button"], [role="dialog"]'));
+      };
+      if (isInteractive(event.target) || isInteractive(document.activeElement)) {
+        return;
+      }
+      event.preventDefault();
+      onAdvanceBeat();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [fightState.status, hasOpenMoment, keyboardBlocked, onAdvanceBeat]);
   const availableMomentChoices = activeMoment
     ? getAvailableMomentChoices(fightState, encounter, storyState)
     : [];
@@ -199,17 +229,31 @@ export function CombatScreen({
           />
         </div>
       ) : (
-        <>
-          <TacticBar
-            currentTactic={fightState.currentTactic}
-            allowRetreat={encounter.allowRetreat}
-            onSelectTactic={onSelectTactic}
-            onRetreat={onRetreat}
-          />
-
-          <p className="combat-tap-hint">Tap panel or caption to advance one beat</p>
-        </>
+        <TacticBar
+          currentTactic={fightState.currentTactic}
+          allowRetreat={encounter.allowRetreat}
+          onSelectTactic={onSelectTactic}
+          onRetreat={onRetreat}
+        />
       )}
+
+      <div className="combat-advance-area">
+        <button
+          type="button"
+          className="combat-next-btn"
+          data-testid="combat-next-btn"
+          disabled={hasOpenMoment || fightState.status !== 'ongoing'}
+          onClick={onAdvanceBeat}
+        >
+          Next beat
+        </button>
+
+        {!hasOpenMoment && fightState.beatNumber < 3 && (
+          <p className="combat-tap-hint" data-testid="combat-tap-hint">
+            Tap panel or caption to advance one beat
+          </p>
+        )}
+      </div>
     </section>
   );
 }

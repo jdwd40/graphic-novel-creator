@@ -624,6 +624,7 @@ export function StoryPlayer({
                 `${currentNode.encounter.enemy.name} bars your path.`
               }
               feedback={feedback}
+              keyboardBlocked={showInventory || battleGuideOpen}
               onAdvanceBeat={handleAdvanceBeat}
               onSelectTactic={handleSelectTactic}
               onRetreat={handleRetreat}

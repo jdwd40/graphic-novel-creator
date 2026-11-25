@@ -1,4 +1,5 @@
 import { BARE_HANDS_DAMAGE, NO_ARMOUR_BUFFER } from './constants';
+import { selectLoopPattern } from './rng';
 import type {
   BeatEvent,
   Encounter,
@@ -27,8 +28,11 @@ export function startFight(
 ): FightState {
   const playerBuffer = player.armour?.buffer ?? NO_ARMOUR_BUFFER;
   const playerWeaponDamage = player.weapon?.damage ?? BARE_HANDS_DAMAGE;
+  const playthroughId = options.playthroughId ?? 'default-playthrough';
+  const encounterId = options.encounterId ?? 'default-encounter';
   const pattern = [...encounter.pattern];
   const altPattern = encounter.altPattern ? [...encounter.altPattern] : null;
+  const activePattern = selectLoopPattern(pattern, altPattern, playthroughId, encounterId, 0);
 
   return {
     enemyHealth: encounter.enemy.health,
@@ -43,7 +47,7 @@ export function startFight(
     beatNumber: 0,
     pattern,
     altPattern,
-    activePattern: [...pattern],
+    activePattern,
     patternIndex: 0,
     loopCount: 0,
     phase: 0,
@@ -56,8 +60,8 @@ export function startFight(
     unlockedChoices: [],
     unlockedExits: [],
     releasedHealthFloor: false,
-    playthroughId: options.playthroughId ?? 'default-playthrough',
-    encounterId: options.encounterId ?? 'default-encounter',
+    playthroughId,
+    encounterId,
     status: 'ongoing',
     exitKey: null,
     beatLog: [],
@@ -342,11 +346,21 @@ export function resolveBeat(
 
   let nextPatternIndex = state.patternIndex;
   let nextLoopCount = state.loopCount;
+  let nextActivePattern = state.activePattern;
   if (!wasPendingOpen) {
     const rawNext = state.patternIndex + 1;
     if (rawNext >= state.activePattern.length) {
       nextPatternIndex = 0;
       nextLoopCount = state.loopCount + 1;
+      if (state.phase === 0) {
+        nextActivePattern = selectLoopPattern(
+          state.pattern,
+          state.altPattern,
+          state.playthroughId,
+          state.encounterId,
+          nextLoopCount,
+        );
+      }
     } else {
       nextPatternIndex = rawNext;
     }
@@ -360,6 +374,7 @@ export function resolveBeat(
     playerHealth: nextPlayerHealth,
     playerBuffer: nextBuffer,
     beatNumber: state.beatNumber + 1,
+    activePattern: [...nextActivePattern],
     patternIndex: nextPatternIndex,
     loopCount: nextLoopCount,
     currentTactic: tactic,
